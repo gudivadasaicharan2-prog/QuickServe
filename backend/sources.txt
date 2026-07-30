@@ -16,11 +16,16 @@ C:\Users\LENOVO\Downloads\quickserve\backend\src\main\java\com\quickserve\backen
 C:\Users\LENOVO\Downloads\quickserve\backend\src\main\java\com\quickserve\backend\dto\OrderResponse.java
 C:\Users\LENOVO\Downloads\quickserve\backend\src\main\java\com\quickserve\backend\dto\OrderStatusUpdateRequest.java
 C:\Users\LENOVO\Downloads\quickserve\backend\src\main\java\com\quickserve\backend\dto\package-info.java
+C:\Users\LENOVO\Downloads\quickserve\backend\src\main\java\com\quickserve\backend\dto\ServiceRequestRequest.java
+C:\Users\LENOVO\Downloads\quickserve\backend\src\main\java\com\quickserve\backend\dto\ServiceRequestResponse.java
+C:\Users\LENOVO\Downloads\quickserve\backend\src\main\java\com\quickserve\backend\dto\ServiceRequestStatusUpdateRequest.java
 C:\Users\LENOVO\Downloads\quickserve\backend\src\main\java\com\quickserve\backend\entity\Category.java
 C:\Users\LENOVO\Downloads\quickserve\backend\src\main\java\com\quickserve\backend\entity\CustomerOrder.java
 C:\Users\LENOVO\Downloads\quickserve\backend\src\main\java\com\quickserve\backend\entity\MenuItem.java
 C:\Users\LENOVO\Downloads\quickserve\backend\src\main\java\com\quickserve\backend\entity\OrderItem.java
 C:\Users\LENOVO\Downloads\quickserve\backend\src\main\java\com\quickserve\backend\entity\OrderStatus.java
+C:\Users\LENOVO\Downloads\quickserve\backend\src\main\java\com\quickserve\backend\entity\RequestStatus.java
+C:\Users\LENOVO\Downloads\quickserve\backend\src\main\java\com\quickserve\backend\entity\RequestType.java
 C:\Users\LENOVO\Downloads\quickserve\backend\src\main\java\com\quickserve\backend\entity\Restaurant.java
 C:\Users\LENOVO\Downloads\quickserve\backend\src\main\java\com\quickserve\backend\entity\ServiceRequest.java
 C:\Users\LENOVO\Downloads\quickserve\backend\src\main\java\com\quickserve\backend\exception\DuplicateResourceException.java
