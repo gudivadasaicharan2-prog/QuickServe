@@ -12,11 +12,10 @@ import lombok.NoArgsConstructor;
 @Builder
 public class LoginResponse {
 
-    private Long id;
+    private String token;
+    @Builder.Default
+    private String type = "Bearer";
     private String username;
     private String fullName;
     private Role role;
-    
-    // A JWT token would normally go here, but omitted per requirements for now.
-    private String message;
 }

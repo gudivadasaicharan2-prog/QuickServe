@@ -45,7 +45,11 @@ C:\Users\LENOVO\Downloads\quickserve\backend\src\main\java\com\quickserve\backen
 C:\Users\LENOVO\Downloads\quickserve\backend\src\main\java\com\quickserve\backend\repository\RestaurantRepository.java
 C:\Users\LENOVO\Downloads\quickserve\backend\src\main\java\com\quickserve\backend\repository\ServiceRequestRepository.java
 C:\Users\LENOVO\Downloads\quickserve\backend\src\main\java\com\quickserve\backend\repository\UserRepository.java
+C:\Users\LENOVO\Downloads\quickserve\backend\src\main\java\com\quickserve\backend\security\JwtAuthenticationEntryPoint.java
+C:\Users\LENOVO\Downloads\quickserve\backend\src\main\java\com\quickserve\backend\security\JwtAuthenticationFilter.java
+C:\Users\LENOVO\Downloads\quickserve\backend\src\main\java\com\quickserve\backend\security\JwtTokenProvider.java
 C:\Users\LENOVO\Downloads\quickserve\backend\src\main\java\com\quickserve\backend\security\SecurityConfig.java
+C:\Users\LENOVO\Downloads\quickserve\backend\src\main\java\com\quickserve\backend\security\UserDetailsServiceImpl.java
 C:\Users\LENOVO\Downloads\quickserve\backend\src\main\java\com\quickserve\backend\service\CategoryService.java
 C:\Users\LENOVO\Downloads\quickserve\backend\src\main\java\com\quickserve\backend\service\CustomerOrderService.java
 C:\Users\LENOVO\Downloads\quickserve\backend\src\main\java\com\quickserve\backend\service\MenuItemService.java

@@ -7,6 +7,7 @@ import com.quickserve.backend.entity.Role;
 import com.quickserve.backend.entity.User;
 import com.quickserve.backend.exception.DuplicateResourceException;
 import com.quickserve.backend.repository.UserRepository;
+import com.quickserve.backend.security.JwtTokenProvider;
 import com.quickserve.backend.service.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -20,6 +21,7 @@ public class UserServiceImpl implements UserService {
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
+    private final JwtTokenProvider tokenProvider;
 
     @Override
     public void createOwner(CreateOwnerRequest request) {
@@ -52,12 +54,13 @@ public class UserServiceImpl implements UserService {
             throw new IllegalArgumentException("Account is disabled");
         }
 
+        String token = tokenProvider.generateToken(user);
+
         return LoginResponse.builder()
-                .id(user.getId())
+                .token(token)
                 .username(user.getUsername())
                 .fullName(user.getFullName())
                 .role(user.getRole())
-                .message("Login successful")
                 .build();
     }
 }
