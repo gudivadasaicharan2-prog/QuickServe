@@ -39,12 +39,21 @@ public class DataSeeder {
 
     private void seedOwner() {
         if (userRepository.existsByUsername("admin")) {
-            log.info("[Seed] Owner already exists — skipping.");
+            // Update password to ensure it matches the configured password
+            userRepository.findByUsername("admin").ifPresent(owner -> {
+                if (!passwordEncoder.matches("sai@2008", owner.getPassword())) {
+                    owner.setPassword(passwordEncoder.encode("sai@2008"));
+                    userRepository.save(owner);
+                    log.info("[Seed] Owner password updated → username: admin");
+                } else {
+                    log.info("[Seed] Owner already exists — skipping.");
+                }
+            });
             return;
         }
         User owner = User.builder()
                 .username("admin")
-                .password(passwordEncoder.encode("admin123"))
+                .password(passwordEncoder.encode("sai@2008"))
                 .fullName("System Administrator")
                 .role(Role.OWNER)
                 .enabled(true)
