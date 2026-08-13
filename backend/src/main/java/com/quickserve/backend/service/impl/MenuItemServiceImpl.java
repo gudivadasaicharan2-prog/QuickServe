@@ -81,6 +81,7 @@ public class MenuItemServiceImpl implements MenuItemService {
                 .price(request.getPrice())
                 .imageUrl(request.getImageUrl() != null ? request.getImageUrl().trim() : null)
                 .available(request.getAvailable() == null ? true : request.getAvailable())
+                .preparationTime(request.getPreparationTime())
                 .category(category)
                 .build();
 
@@ -105,6 +106,7 @@ public class MenuItemServiceImpl implements MenuItemService {
         if (request.getAvailable() != null) {
             item.setAvailable(request.getAvailable());
         }
+        item.setPreparationTime(request.getPreparationTime());
         item.setCategory(category);
 
         return toResponse(menuItemRepository.save(item));
@@ -140,6 +142,7 @@ public class MenuItemServiceImpl implements MenuItemService {
                 .price(item.getPrice())
                 .imageUrl(item.getImageUrl())
                 .available(item.isAvailable())
+                .preparationTime(item.getPreparationTime())
                 .categoryId(item.getCategory().getId())
                 .categoryName(item.getCategory().getName())
                 .createdAt(item.getCreatedAt())

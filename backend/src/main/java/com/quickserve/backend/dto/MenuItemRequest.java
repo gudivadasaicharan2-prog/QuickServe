@@ -30,6 +30,14 @@ public class MenuItemRequest {
      */
     private Boolean available;
 
+    /**
+     * Estimated preparation time in minutes.
+     * Optional — if not supplied the field is persisted as {@code null}.
+     * Must be a positive integer when provided (e.g. Coffee → 5, Biryani → 30).
+     */
+    @jakarta.validation.constraints.Min(value = 1, message = "Preparation time must be at least 1 minute")
+    private Integer preparationTime;
+
     @NotNull(message = "Category ID is required")
     private Long categoryId;
 }

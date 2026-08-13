@@ -113,14 +113,14 @@ public class DataSeeder {
     private void seedMenuItems() {
         // Map: item name → { categoryName, price, description }
         List<MenuItemSeed> items = List.of(
-                new MenuItemSeed("Coffee",          "Beverages",   new BigDecimal("60.00"),  "Hot freshly brewed coffee"),
-                new MenuItemSeed("Tea",             "Beverages",   new BigDecimal("40.00"),  "Masala chai tea"),
-                new MenuItemSeed("Lemon Juice",     "Beverages",   new BigDecimal("50.00"),  "Fresh-squeezed lemon juice"),
-                new MenuItemSeed("Veg Fried Rice",  "Main Course", new BigDecimal("150.00"), "Stir-fried rice with vegetables"),
-                new MenuItemSeed("Chicken Biryani", "Main Course", new BigDecimal("220.00"), "Fragrant basmati rice with spiced chicken"),
-                new MenuItemSeed("Spring Rolls",    "Starters",    new BigDecimal("90.00"),  "Crispy vegetable spring rolls"),
-                new MenuItemSeed("Paneer Tikka",    "Starters",    new BigDecimal("130.00"), "Grilled cottage cheese with spices"),
-                new MenuItemSeed("Ice Cream",       "Desserts",    new BigDecimal("80.00"),  "Vanilla / Chocolate scoops")
+                new MenuItemSeed("Coffee",          "Beverages",   new BigDecimal("60.00"),  "Hot freshly brewed coffee",               5),
+                new MenuItemSeed("Tea",             "Beverages",   new BigDecimal("40.00"),  "Masala chai tea",                         3),
+                new MenuItemSeed("Lemon Juice",     "Beverages",   new BigDecimal("50.00"),  "Fresh-squeezed lemon juice",              5),
+                new MenuItemSeed("Veg Fried Rice",  "Main Course", new BigDecimal("150.00"), "Stir-fried rice with vegetables",         20),
+                new MenuItemSeed("Chicken Biryani", "Main Course", new BigDecimal("220.00"), "Fragrant basmati rice with spiced chicken", 30),
+                new MenuItemSeed("Spring Rolls",    "Starters",    new BigDecimal("90.00"),  "Crispy vegetable spring rolls",           12),
+                new MenuItemSeed("Paneer Tikka",    "Starters",    new BigDecimal("130.00"), "Grilled cottage cheese with spices",      15),
+                new MenuItemSeed("Ice Cream",       "Desserts",    new BigDecimal("80.00"),  "Vanilla / Chocolate scoops",              5)
         );
 
         for (MenuItemSeed seed : items) {
@@ -138,15 +138,16 @@ public class DataSeeder {
                     .name(seed.name())
                     .description(seed.description())
                     .price(seed.price())
+                    .preparationTime(seed.preparationTime())
                     .category(category)
                     .available(true)
                     .build();
             menuItemRepository.save(item);
-            log.info("[Seed] Menu item created → {} (₹{})", seed.name(), seed.price());
+            log.info("[Seed] Menu item created → {} (₹{}, ~{}min)", seed.name(), seed.price(), seed.preparationTime());
         }
     }
 
     // ── Inner record ─────────────────────────────────────────────────────────
 
-    private record MenuItemSeed(String name, String categoryName, BigDecimal price, String description) {}
+    private record MenuItemSeed(String name, String categoryName, BigDecimal price, String description, Integer preparationTime) {}
 }

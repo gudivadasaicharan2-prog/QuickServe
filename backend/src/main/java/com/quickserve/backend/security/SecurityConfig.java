@@ -51,6 +51,7 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/api/orders/{id}").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/requests").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/requests/{id}").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/location/validate").permitAll()
                         .anyRequest().hasRole("OWNER")
                 );
 

@@ -2,8 +2,10 @@ C:\Users\LENOVO\Downloads\quickserve\backend\src\main\java\com\quickserve\backen
 C:\Users\LENOVO\Downloads\quickserve\backend\src\main\java\com\quickserve\backend\config\DataSeeder.java
 C:\Users\LENOVO\Downloads\quickserve\backend\src\main\java\com\quickserve\backend\config\OpenApiConfig.java
 C:\Users\LENOVO\Downloads\quickserve\backend\src\main\java\com\quickserve\backend\config\package-info.java
+C:\Users\LENOVO\Downloads\quickserve\backend\src\main\java\com\quickserve\backend\config\RestaurantLocationConfig.java
 C:\Users\LENOVO\Downloads\quickserve\backend\src\main\java\com\quickserve\backend\controller\AuthController.java
 C:\Users\LENOVO\Downloads\quickserve\backend\src\main\java\com\quickserve\backend\controller\CategoryController.java
+C:\Users\LENOVO\Downloads\quickserve\backend\src\main\java\com\quickserve\backend\controller\LocationController.java
 C:\Users\LENOVO\Downloads\quickserve\backend\src\main\java\com\quickserve\backend\controller\MenuItemController.java
 C:\Users\LENOVO\Downloads\quickserve\backend\src\main\java\com\quickserve\backend\controller\OrderController.java
 C:\Users\LENOVO\Downloads\quickserve\backend\src\main\java\com\quickserve\backend\controller\OrderItemController.java
@@ -13,6 +15,8 @@ C:\Users\LENOVO\Downloads\quickserve\backend\src\main\java\com\quickserve\backen
 C:\Users\LENOVO\Downloads\quickserve\backend\src\main\java\com\quickserve\backend\dto\CategoryRequest.java
 C:\Users\LENOVO\Downloads\quickserve\backend\src\main\java\com\quickserve\backend\dto\CategoryResponse.java
 C:\Users\LENOVO\Downloads\quickserve\backend\src\main\java\com\quickserve\backend\dto\CreateOwnerRequest.java
+C:\Users\LENOVO\Downloads\quickserve\backend\src\main\java\com\quickserve\backend\dto\LocationValidationRequest.java
+C:\Users\LENOVO\Downloads\quickserve\backend\src\main\java\com\quickserve\backend\dto\LocationValidationResponse.java
 C:\Users\LENOVO\Downloads\quickserve\backend\src\main\java\com\quickserve\backend\dto\LoginRequest.java
 C:\Users\LENOVO\Downloads\quickserve\backend\src\main\java\com\quickserve\backend\dto\LoginResponse.java
 C:\Users\LENOVO\Downloads\quickserve\backend\src\main\java\com\quickserve\backend\dto\MenuItemRequest.java
@@ -74,4 +78,5 @@ C:\Users\LENOVO\Downloads\quickserve\backend\src\main\java\com\quickserve\backen
 C:\Users\LENOVO\Downloads\quickserve\backend\src\main\java\com\quickserve\backend\service\RestaurantTableService.java
 C:\Users\LENOVO\Downloads\quickserve\backend\src\main\java\com\quickserve\backend\service\ServiceRequestService.java
 C:\Users\LENOVO\Downloads\quickserve\backend\src\main\java\com\quickserve\backend\service\UserService.java
+C:\Users\LENOVO\Downloads\quickserve\backend\src\main\java\com\quickserve\backend\util\HaversineUtil.java
 C:\Users\LENOVO\Downloads\quickserve\backend\src\main\java\com\quickserve\backend\util\package-info.java

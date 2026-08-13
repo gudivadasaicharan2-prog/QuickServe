@@ -21,6 +21,12 @@ public class MenuItemResponse {
     private String imageUrl;
     private boolean available;
 
+    /**
+     * Estimated preparation time in minutes.
+     * {@code null} if not set for this item.
+     */
+    private Integer preparationTime;
+
     /** Inlined category info — avoids a separate API call for category details. */
     private Long categoryId;
     private String categoryName;

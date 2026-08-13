@@ -34,6 +34,15 @@ public class MenuItem {
     private String imageUrl;
 
     /**
+     * Estimated preparation time for this menu item, in minutes.
+     * Used by the kitchen and displayed to customers after ordering.
+     * Nullable — legacy items that have no preparation time set are treated
+     * as having an unknown / unspecified preparation time.
+     */
+    @Column(name = "preparation_time")
+    private Integer preparationTime;
+
+    /**
      * Whether this item is currently orderable.
      * Defaults to true — a newly added item is available by default.
      */
