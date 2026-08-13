@@ -1,19 +1,16 @@
 import React from 'react';
-import { products } from '../utils/mockData';
-import { useCart } from '../context/CartContext';
-import PrimaryButton from '../components/PrimaryButton';
-const Home = () => {
-  const { addToCart } = useCart();
-  return (
-    <div>
-      <h1>Home Page</h1>
-      {products.map(p => (
-        <div key={p.id}>
-          {p.name} - ${p.price} 
-          <PrimaryButton onClick={() => addToCart(p)}>Add to Cart</PrimaryButton>
-        </div>
-      ))}
-    </div>
-  );
-};
+import Menu from './Menu';
+
+/**
+ * Home
+ *
+ * The landing page of the customer app.
+ * Renders the Menu component, which fetches live menu data from the backend
+ * (GET /api/menu) and displays each item via FoodCard — including the
+ * preparationTime field returned by the API.
+ *
+ * Mock data (utils/mockData.js) is no longer used here.
+ */
+const Home = () => <Menu />;
+
 export default Home;

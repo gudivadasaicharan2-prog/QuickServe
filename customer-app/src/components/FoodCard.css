@@ -1,0 +1,160 @@
+/* ── FoodCard.css ─────────────────────────────────────────────────────────── */
+
+.food-card {
+  display: flex;
+  flex-direction: column;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  overflow: hidden;
+  text-align: left;
+  transition: box-shadow 0.25s ease, transform 0.2s ease;
+}
+
+.food-card:hover {
+  box-shadow: var(--shadow);
+  transform: translateY(-2px);
+}
+
+/* ── Image placeholder ─────────────────────────────────────────────────────── */
+
+.food-card__image {
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  object-fit: cover;
+  display: block;
+  background: var(--code-bg);
+}
+
+.food-card__image-placeholder {
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  background: var(--code-bg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 42px;
+}
+
+/* ── Card body ──────────────────────────────────────────────────────────────── */
+
+.food-card__body {
+  padding: 14px 16px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  flex: 1;
+}
+
+.food-card__name {
+  font-family: var(--heading);
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text-h);
+  margin: 0;
+  line-height: 1.3;
+}
+
+.food-card__category {
+  font-size: 12px;
+  color: var(--accent);
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  font-weight: 500;
+  margin: 0;
+}
+
+.food-card__description {
+  font-size: 13px;
+  color: var(--text);
+  margin: 0;
+  line-height: 1.45;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* ── Meta row (price + prep time) ────────────────────────────────────────── */
+
+.food-card__meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 6px;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.food-card__price {
+  font-size: 17px;
+  font-weight: 700;
+  color: var(--text-h);
+  font-family: var(--mono);
+}
+
+/* ── Preparation time badge ──────────────────────────────────────────────── */
+
+.food-card__prep-time {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--accent);
+  background: var(--accent-bg);
+  border: 1px solid var(--accent-border);
+  border-radius: 20px;
+  padding: 3px 10px;
+  white-space: nowrap;
+}
+
+.food-card__prep-time-icon {
+  font-size: 13px;
+  line-height: 1;
+}
+
+/* ── Unavailable overlay ────────────────────────────────────────────────── */
+
+.food-card--unavailable {
+  opacity: 0.55;
+  pointer-events: none;
+}
+
+.food-card__unavailable-badge {
+  display: inline-block;
+  font-size: 11px;
+  background: #ef4444;
+  color: #fff;
+  border-radius: 4px;
+  padding: 2px 8px;
+  font-weight: 600;
+  letter-spacing: 0.4px;
+  align-self: flex-start;
+}
+
+/* ── Add to cart button ─────────────────────────────────────────────────── */
+
+.food-card__add-btn {
+  margin-top: 10px;
+  width: 100%;
+  padding: 9px 0;
+  background: var(--accent);
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: opacity 0.2s ease;
+  font-family: var(--sans);
+}
+
+.food-card__add-btn:hover {
+  opacity: 0.88;
+}
+
+.food-card__add-btn:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}

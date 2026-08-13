@@ -1,0 +1,81 @@
+/* ── Menu.css ─────────────────────────────────────────────────────────────── */
+
+.menu-page {
+  padding: 24px 28px 40px;
+  text-align: left;
+}
+
+.menu-page__heading {
+  font-family: var(--heading);
+  font-size: 28px;
+  font-weight: 600;
+  color: var(--text-h);
+  margin: 0 0 4px;
+  letter-spacing: -0.5px;
+}
+
+.menu-page__subtitle {
+  font-size: 14px;
+  color: var(--text);
+  margin: 0 0 24px;
+}
+
+/* ── Grid ────────────────────────────────────────────────────────────────── */
+
+.menu-page__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 20px;
+}
+
+@media (max-width: 600px) {
+  .menu-page {
+    padding: 16px 16px 32px;
+  }
+  .menu-page__grid {
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+  }
+}
+
+@media (max-width: 380px) {
+  .menu-page__grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ── State messages ──────────────────────────────────────────────────────── */
+
+.menu-page__state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 60px 20px;
+  color: var(--text);
+  font-size: 15px;
+  text-align: center;
+}
+
+.menu-page__state-icon {
+  font-size: 36px;
+}
+
+.menu-page__state--error {
+  color: #ef4444;
+}
+
+/* Loading spinner (inline, no extra dependency) */
+.menu-page__spinner {
+  width: 36px;
+  height: 36px;
+  border: 3px solid var(--border);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: menu-spin 0.7s linear infinite;
+}
+
+@keyframes menu-spin {
+  to { transform: rotate(360deg); }
+}
