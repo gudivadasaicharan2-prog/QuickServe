@@ -14,7 +14,11 @@ const Sidebar = () => {
     <aside className="sidebar">
       <ul>
         <li><Link to="/">Dashboard</Link></li>
+        <li><Link to="/tables">Tables</Link></li>
+        <li><Link to="/categories">Categories</Link></li>
+        <li><Link to="/menu">Menu</Link></li>
         <li><Link to="/orders">Orders</Link></li>
+        <li><Link to="/requests">Requests</Link></li>
         <li><button onClick={handleLogout} style={styles.logoutBtn}>Logout</button></li>
       </ul>
     </aside>
