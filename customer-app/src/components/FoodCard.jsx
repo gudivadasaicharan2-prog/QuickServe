@@ -1,107 +1,123 @@
-import React from 'react';
 import { useCart } from '../context/CartContext';
+import { Clock, Plus, Minus } from 'lucide-react';
 import './FoodCard.css';
 
 /**
  * FoodCard
  *
  * Displays a single menu item returned by GET /api/menu.
- *
- * Props:
- *   item {object} — menu item from the backend, containing at minimum:
- *     id, name, description, price, imageUrl, available,
- *     preparationTime (nullable Integer), categoryName
- *
- * preparationTime is sourced directly from the backend response.
- * It is NEVER hardcoded here — if the backend returns null, the badge
- * is simply not rendered (graceful degradation).
+ * - Sourced directly from backend response
+ * - Images only rendered if real `imageUrl` is provided (no fake food images)
+ * - Dynamic quantity controls (− 1 +) once added
+ * - Preserves item id on buttons for testability
  */
 const FoodCard = ({ item }) => {
-  const { addToCart } = useCart();
+  const { addToCart, updateQuantity, getItemQuantity } = useCart();
 
   const {
+    id,
     name,
     description,
     price,
     imageUrl,
-    available,
-    preparationTime,   // Nullable Integer from backend — do NOT hardcode
+    available = true,
+    preparationTime,
     categoryName,
   } = item;
+
+  const quantity = getItemQuantity(id);
 
   return (
     <article
       className={`food-card${!available ? ' food-card--unavailable' : ''}`}
       aria-label={name}
     >
-      {/* ── Item image ──────────────────────────────────────────────── */}
-      {imageUrl ? (
-        <img
-          className="food-card__image"
-          src={imageUrl}
-          alt={name}
-          loading="lazy"
-        />
-      ) : (
-        <div className="food-card__image-placeholder" aria-hidden="true">
-          🍽️
-        </div>
-      )}
-
-      {/* ── Card body ───────────────────────────────────────────────── */}
-      <div className="food-card__body">
-
-        {/* Category label */}
-        {categoryName && (
-          <p className="food-card__category">{categoryName}</p>
-        )}
-
-        {/* Item name */}
-        <h2 className="food-card__name">{name}</h2>
-
-        {/* Description */}
-        {description && (
-          <p className="food-card__description">{description}</p>
-        )}
-
-        {/* Unavailable badge */}
-        {!available && (
-          <span className="food-card__unavailable-badge">Unavailable</span>
-        )}
-
-        {/* ── Price + Preparation time ───────────────────────────────── */}
-        <div className="food-card__meta">
-          <span className="food-card__price">₹{Number(price).toFixed(2)}</span>
-
-          {/*
-           * Preparation time badge.
-           * Only rendered when the backend actually provides a value.
-           * preparationTime === null or undefined → badge is hidden.
-           */}
+      <div className="food-card__content">
+        {/* Category & Prep Time */}
+        <div className="food-card__top-meta">
+          {categoryName && (
+            <span className="food-card__category">{categoryName}</span>
+          )}
           {preparationTime != null && (
             <span
               className="food-card__prep-time"
               title="Estimated preparation time"
               aria-label={`Preparation time: ${preparationTime} minutes`}
             >
-              <span className="food-card__prep-time-icon" aria-hidden="true">⏱</span>
+              <Clock size={12} />
               {preparationTime} min
             </span>
           )}
         </div>
 
-        {/* ── Add to cart ─────────────────────────────────────────────── */}
-        {available && (
-          <button
-            id={`add-to-cart-${item.id}`}
-            className="food-card__add-btn"
-            onClick={() => addToCart(item)}
-            aria-label={`Add ${name} to cart`}
-          >
-            Add to Cart
-          </button>
+        {/* Item Name */}
+        <h3 className="food-card__name">{name}</h3>
+
+        {/* Description (if available) */}
+        {description && (
+          <p className="food-card__description">{description}</p>
         )}
+
+        {/* Footer: Price + Add / Quantity Controls */}
+        <div className="food-card__footer">
+          <div className="food-card__price-wrap">
+            <span className="food-card__price">₹{Number(price).toFixed(2)}</span>
+            {!available && (
+              <span className="food-card__unavailable-tag">Unavailable</span>
+            )}
+          </div>
+
+          <div className="food-card__action">
+            {!available ? (
+              <span className="food-card__sold-out">Sold out</span>
+            ) : quantity > 0 ? (
+              <div className="qty-control" role="group" aria-label={`Quantity for ${name}`}>
+                <button
+                  className="qty-btn"
+                  onClick={() => updateQuantity(id, quantity - 1)}
+                  aria-label={`Decrease quantity of ${name}`}
+                >
+                  <Minus size={14} />
+                </button>
+                <span className="qty-display">{quantity}</span>
+                <button
+                  className="qty-btn"
+                  onClick={() => updateQuantity(id, quantity + 1)}
+                  aria-label={`Increase quantity of ${name}`}
+                >
+                  <Plus size={14} />
+                </button>
+              </div>
+            ) : (
+              <button
+                id={`add-to-cart-${id}`}
+                className="food-card__add-btn"
+                onClick={() => addToCart(item)}
+                aria-label={`Add ${name} to cart`}
+              >
+                <Plus size={14} />
+                <span>Add</span>
+              </button>
+            )}
+          </div>
+        </div>
       </div>
+
+      {/* Real Image ONLY if present (NO placeholders) */}
+      {imageUrl && (
+        <div className="food-card__media">
+          <img
+            src={imageUrl}
+            alt={name}
+            loading="lazy"
+            className="food-card__img"
+            onError={(e) => {
+              // Hide image container if it fails to load
+              e.target.style.display = 'none';
+            }}
+          />
+        </div>
+      )}
     </article>
   );
 };

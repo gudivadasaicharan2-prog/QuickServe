@@ -1,13 +1,10 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import fetchApi from '../utils/fetchApi';
+import PageHeader from '../components/PageHeader';
+import StatusBadge from '../components/StatusBadge';
+import { RefreshCw, Bell, AlertCircle, CheckCircle2, ArrowRight } from 'lucide-react';
 
 const REQUEST_STATUSES = ['PENDING', 'IN_PROGRESS', 'COMPLETED'];
-
-const STATUS_COLORS = {
-  PENDING: '#f59e0b',
-  IN_PROGRESS: '#3b82f6',
-  COMPLETED: '#10b981',
-};
 
 const NEXT_STATUS_MAP = {
   PENDING: ['IN_PROGRESS'],
@@ -17,19 +14,11 @@ const NEXT_STATUS_MAP = {
 
 const fmtDate = (dateStr) => {
   if (!dateStr) return '—';
-  return new Date(dateStr).toLocaleString();
+  return new Date(dateStr).toLocaleString('en-IN', {
+    dateStyle: 'medium',
+    timeStyle: 'short',
+  });
 };
-
-const StatusBadge = ({ status }) => (
-  <span
-    style={{
-      ...styles.badge,
-      backgroundColor: STATUS_COLORS[status] || '#6b7280',
-    }}
-  >
-    {status}
-  </span>
-);
 
 const Requests = () => {
   const [requests, setRequests] = useState([]);
@@ -90,203 +79,268 @@ const Requests = () => {
     }
   };
 
-  if (loading) {
-    return (
-      <div style={styles.page}>
-        <h1>Service Requests</h1>
-        <p style={styles.loadingText}>Loading requests…</p>
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div style={styles.page}>
-        <h1>Service Requests</h1>
-        <p style={styles.errorText}>{error}</p>
-        <button onClick={() => loadRequests('ALL')} style={styles.retryBtn}>
-          Retry
-        </button>
-      </div>
-    );
-  }
-
   return (
-    <div style={styles.page}>
-      <h1>Service Requests</h1>
+    <div>
+      <PageHeader
+        title="Service Requests"
+        subtitle="Manage customer requests for waiter, bill, cutlery, and assistance"
+        action={
+          <button
+            className="btn btn-secondary btn-sm"
+            onClick={() => loadRequests(statusFilter)}
+            aria-label="Refresh requests"
+          >
+            <RefreshCw size={15} />
+            Refresh
+          </button>
+        }
+      />
 
-      {/* Status filter tabs */}
-      <div style={styles.filterRow}>
+      {/* Filter pills */}
+      <div className="filter-pills" style={{ marginBottom: '1.25rem' }}>
         {['ALL', ...REQUEST_STATUSES].map((s) => (
           <button
             key={s}
+            className={`filter-pill${statusFilter === s ? ' active' : ''}`}
             onClick={() => handleFilterChange(s)}
             disabled={filterLoading}
-            style={{
-              ...styles.filterBtn,
-              ...(statusFilter === s ? styles.filterBtnActive : {}),
-              ...(s !== 'ALL' ? { borderBottom: `3px solid ${STATUS_COLORS[s]}` } : {}),
-            }}
           >
-            {s}
+            {s === 'ALL' ? 'All Requests' : s.replace('_', ' ')}
           </button>
         ))}
       </div>
 
-      {updateError && <p style={styles.errorText}>{updateError}</p>}
-      {filterLoading && <p style={styles.loadingText}>Filtering…</p>}
+      {updateError && (
+        <div className="error-banner">
+          <AlertCircle size={15} />
+          <span>{updateError}</span>
+        </div>
+      )}
 
-      {/* Requests list */}
-      {!filterLoading && requests.length === 0 ? (
-        <p style={styles.emptyText}>No service requests found for status: {statusFilter}</p>
-      ) : (
-        <table style={styles.table}>
-          <thead>
-            <tr>
-              <th style={styles.th}>ID</th>
-              <th style={styles.th}>Table</th>
-              <th style={styles.th}>Type</th>
-              <th style={styles.th}>Notes</th>
-              <th style={styles.th}>Status</th>
-              <th style={styles.th}>Created At</th>
-              <th style={styles.th}>Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {requests.map((req) => {
-              const nextStatuses = NEXT_STATUS_MAP[req.status] || [];
-              const isUpdating = updatingId === req.id;
+      {loading && (
+        <div className="state-container">
+          <div className="spinner" />
+          <span className="state-title">Loading service requests…</span>
+        </div>
+      )}
 
-              return (
-                <tr key={req.id} style={styles.tr}>
-                  <td style={styles.td}>
-                    <strong>#{req.id}</strong>
-                  </td>
-                  <td style={styles.td}>{req.tableNumber || '—'}</td>
-                  <td style={styles.td}>
-                    <strong>{req.requestType ? req.requestType.replace('_', ' ') : '—'}</strong>
-                  </td>
-                  <td style={styles.td}>{req.notes || '—'}</td>
-                  <td style={styles.td}>
-                    <StatusBadge status={req.status} />
-                  </td>
-                  <td style={styles.td}>{fmtDate(req.createdAt)}</td>
-                  <td style={styles.td}>
-                    {nextStatuses.map((nextStatus) => (
-                      <button
-                        key={nextStatus}
-                        onClick={() => handleStatusUpdate(req.id, nextStatus)}
-                        disabled={isUpdating}
+      {error && !loading && (
+        <div>
+          <div className="error-banner">
+            <AlertCircle size={15} />
+            <span>{error}</span>
+          </div>
+          <button
+            className="btn btn-secondary btn-sm"
+            onClick={() => loadRequests(statusFilter)}
+          >
+            Retry
+          </button>
+        </div>
+      )}
+
+      {!loading && !error && (
+        <>
+          {filterLoading && (
+            <div
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.5rem',
+                marginBottom: '0.75rem',
+                color: 'var(--text-secondary)',
+                fontSize: '0.875rem',
+              }}
+            >
+              <div className="spinner" style={{ width: 14, height: 14 }} />
+              Filtering requests…
+            </div>
+          )}
+
+          {!filterLoading && requests.length === 0 ? (
+            <div className="state-container card">
+              <Bell size={32} strokeWidth={1.25} style={{ opacity: 0.3 }} />
+              <span className="state-title">No service requests found</span>
+              <span className="state-desc">
+                No requests matching status: {statusFilter.replace('_', ' ')}
+              </span>
+            </div>
+          ) : (
+            <>
+              {/* Desktop Table */}
+              <div className="card hide-mobile" style={{ overflow: 'auto' }}>
+                <table className="qs-table">
+                  <thead>
+                    <tr>
+                      <th>ID</th>
+                      <th>Table</th>
+                      <th>Type</th>
+                      <th>Notes</th>
+                      <th>Status</th>
+                      <th>Created At</th>
+                      <th style={{ textAlign: 'right' }}>Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {requests.map((req) => {
+                      const nextStatuses = NEXT_STATUS_MAP[req.status] || [];
+                      const isUpdating = updatingId === req.id;
+
+                      return (
+                        <tr key={req.id}>
+                          <td>
+                            <strong>#{req.id}</strong>
+                          </td>
+                          <td>{req.tableNumber ? `Table ${req.tableNumber}` : '—'}</td>
+                          <td>
+                            <strong style={{ letterSpacing: '0.01em' }}>
+                              {req.requestType ? req.requestType.replace('_', ' ') : '—'}
+                            </strong>
+                          </td>
+                          <td style={{ color: req.notes ? 'var(--text-primary)' : 'var(--text-tertiary)', maxWidth: 280 }}>
+                            {req.notes || 'No instructions'}
+                          </td>
+                          <td>
+                            <StatusBadge status={req.status} />
+                          </td>
+                          <td style={{ color: 'var(--text-secondary)', fontSize: '0.875rem' }}>
+                            {fmtDate(req.createdAt)}
+                          </td>
+                          <td style={{ textAlign: 'right' }}>
+                            {nextStatuses.map((nextStatus) => (
+                              <button
+                                key={nextStatus}
+                                onClick={() => handleStatusUpdate(req.id, nextStatus)}
+                                disabled={isUpdating}
+                                className={`btn btn-sm ${
+                                  nextStatus === 'COMPLETED' ? 'btn-success' : 'btn-primary'
+                                }`}
+                              >
+                                {isUpdating ? (
+                                  'Updating…'
+                                ) : (
+                                  <>
+                                    <span>Mark {nextStatus.replace('_', ' ')}</span>
+                                    <ArrowRight size={13} />
+                                  </>
+                                )}
+                              </button>
+                            ))}
+                            {nextStatuses.length === 0 && (
+                              <span
+                                style={{
+                                  display: 'inline-flex',
+                                  alignItems: 'center',
+                                  gap: '0.35rem',
+                                  fontSize: '0.8125rem',
+                                  color: 'var(--success)',
+                                  fontWeight: 500,
+                                }}
+                              >
+                                <CheckCircle2 size={15} /> Completed
+                              </span>
+                            )}
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+
+              {/* Mobile Cards */}
+              <div className="show-mobile" style={{ flexDirection: 'column', gap: '0.75rem' }}>
+                {requests.map((req) => {
+                  const nextStatuses = NEXT_STATUS_MAP[req.status] || [];
+                  const isUpdating = updatingId === req.id;
+
+                  return (
+                    <div key={req.id} className="card card-body" style={{ padding: '1rem' }}>
+                      <div
                         style={{
-                          ...styles.actionBtn,
-                          backgroundColor: STATUS_COLORS[nextStatus],
+                          display: 'flex',
+                          justifyContent: 'space-between',
+                          alignItems: 'flex-start',
+                          marginBottom: '0.5rem',
                         }}
                       >
-                        {isUpdating ? '...' : `Mark ${nextStatus.replace('_', ' ')}`}
-                      </button>
-                    ))}
-                    {nextStatuses.length === 0 && <span style={styles.completedText}>—</span>}
-                  </td>
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
+                        <div>
+                          <strong>#{req.id}</strong> —{' '}
+                          <span style={{ fontWeight: 600 }}>
+                            {req.requestType ? req.requestType.replace('_', ' ') : 'Request'}
+                          </span>
+                        </div>
+                        <StatusBadge status={req.status} />
+                      </div>
+
+                      <div
+                        style={{
+                          fontSize: '0.875rem',
+                          color: 'var(--text-secondary)',
+                          marginBottom: '0.625rem',
+                        }}
+                      >
+                        <span>{req.tableNumber ? `Table ${req.tableNumber}` : 'No table assigned'}</span>
+                      </div>
+
+                      {req.notes && (
+                        <div
+                          style={{
+                            background: 'var(--surface-2)',
+                            padding: '0.5rem 0.75rem',
+                            borderRadius: 'var(--radius-sm)',
+                            fontSize: '0.875rem',
+                            marginBottom: '0.75rem',
+                            color: 'var(--text-primary)',
+                          }}
+                        >
+                          <strong>Notes: </strong>
+                          {req.notes}
+                        </div>
+                      )}
+
+                      <div
+                        style={{
+                          display: 'flex',
+                          justifyContent: 'space-between',
+                          alignItems: 'center',
+                          borderTop: '1px solid var(--border-light)',
+                          paddingTop: '0.75rem',
+                        }}
+                      >
+                        <span style={{ fontSize: '0.8125rem', color: 'var(--text-tertiary)' }}>
+                          {fmtDate(req.createdAt)}
+                        </span>
+                        <div>
+                          {nextStatuses.map((nextStatus) => (
+                            <button
+                              key={nextStatus}
+                              onClick={() => handleStatusUpdate(req.id, nextStatus)}
+                              disabled={isUpdating}
+                              className={`btn btn-sm ${
+                                nextStatus === 'COMPLETED' ? 'btn-success' : 'btn-primary'
+                              }`}
+                            >
+                              {isUpdating ? 'Updating…' : `Mark ${nextStatus.replace('_', ' ')}`}
+                            </button>
+                          ))}
+                          {nextStatuses.length === 0 && (
+                            <span style={{ fontSize: '0.8125rem', color: 'var(--success)' }}>
+                              ✓ Resolved
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </>
+          )}
+        </>
       )}
     </div>
   );
-};
-
-const styles = {
-  page: {
-    padding: '1.5rem',
-    fontFamily: 'sans-serif',
-  },
-  filterRow: {
-    display: 'flex',
-    flexWrap: 'wrap',
-    gap: '0.5rem',
-    marginBottom: '1.25rem',
-  },
-  filterBtn: {
-    padding: '0.4rem 0.9rem',
-    border: '1px solid #d1d5db',
-    borderRadius: '4px',
-    background: 'white',
-    cursor: 'pointer',
-    fontSize: '0.85rem',
-  },
-  filterBtnActive: {
-    background: '#1e293b',
-    color: 'white',
-    borderColor: '#1e293b',
-  },
-  table: {
-    width: '100%',
-    borderCollapse: 'collapse',
-    fontSize: '0.9rem',
-  },
-  th: {
-    textAlign: 'left',
-    padding: '0.65rem 0.75rem',
-    borderBottom: '2px solid #e5e7eb',
-    fontWeight: '600',
-    color: '#374151',
-    background: '#f9fafb',
-  },
-  tr: {
-    borderBottom: '1px solid #f3f4f6',
-  },
-  td: {
-    padding: '0.65rem 0.75rem',
-    verticalAlign: 'middle',
-    color: '#111827',
-  },
-  badge: {
-    display: 'inline-block',
-    padding: '0.2rem 0.55rem',
-    borderRadius: '999px',
-    fontSize: '0.75rem',
-    fontWeight: '600',
-    color: 'white',
-    letterSpacing: '0.02em',
-  },
-  actionBtn: {
-    padding: '0.35rem 0.75rem',
-    fontSize: '0.8rem',
-    color: 'white',
-    border: 'none',
-    borderRadius: '4px',
-    cursor: 'pointer',
-    fontWeight: '600',
-    marginRight: '0.5rem',
-  },
-  completedText: {
-    color: '#9ca3af',
-  },
-  loadingText: {
-    color: '#6b7280',
-    fontStyle: 'italic',
-  },
-  errorText: {
-    color: '#dc2626',
-    marginTop: '0.5rem',
-    marginBottom: '0.5rem',
-  },
-  emptyText: {
-    color: '#9ca3af',
-    marginTop: '1rem',
-    fontStyle: 'italic',
-  },
-  retryBtn: {
-    marginTop: '0.75rem',
-    padding: '0.4rem 1rem',
-    background: '#3b82f6',
-    color: 'white',
-    border: 'none',
-    borderRadius: '4px',
-    cursor: 'pointer',
-  },
 };
 
 export default Requests;

@@ -1,9 +1,15 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import fetchApi from '../utils/fetchApi';
+import PageHeader from '../components/PageHeader';
+import Modal from '../components/Modal';
+import { Plus, Tag, Edit2, Trash2, AlertCircle } from 'lucide-react';
 
 const fmtDate = (dateStr) => {
   if (!dateStr) return '—';
-  return new Date(dateStr).toLocaleString();
+  return new Date(dateStr).toLocaleString('en-IN', {
+    dateStyle: 'medium',
+    timeStyle: 'short',
+  });
 };
 
 const Categories = () => {
@@ -14,7 +20,7 @@ const Categories = () => {
 
   // Modal State for Add / Edit
   const [modalOpen, setModalOpen] = useState(false);
-  const [editingCategory, setEditingCategory] = useState(null); // null if adding, category object if editing
+  const [editingCategory, setEditingCategory] = useState(null);
   const [formData, setFormData] = useState({ name: '', description: '' });
   const [submitting, setSubmitting] = useState(false);
 
@@ -73,16 +79,16 @@ const Categories = () => {
 
     try {
       if (editingCategory) {
-        // Update existing category (PUT /api/categories/{id})
         const updated = await fetchApi(`/api/categories/${editingCategory.id}`, {
           method: 'PUT',
           body: payload,
         });
         setCategories((prev) =>
-          prev.map((c) => (c.id === editingCategory.id ? updated : c)).sort((a, b) => a.name.localeCompare(b.name))
+          prev
+            .map((c) => (c.id === editingCategory.id ? updated : c))
+            .sort((a, b) => a.name.localeCompare(b.name))
         );
       } else {
-        // Create new category (POST /api/categories)
         const created = await fetchApi('/api/categories', {
           method: 'POST',
           body: payload,
@@ -93,7 +99,9 @@ const Categories = () => {
       }
       handleCloseModal();
     } catch (err) {
-      setActionError(`Failed to ${editingCategory ? 'update' : 'create'} category: ${err.message}`);
+      setActionError(
+        `Failed to ${editingCategory ? 'update' : 'create'} category: ${err.message}`
+      );
     } finally {
       setSubmitting(false);
     }
@@ -112,316 +120,251 @@ const Categories = () => {
     }
   };
 
-  if (loading) {
-    return (
-      <div style={styles.page}>
-        <h1>Categories</h1>
-        <p style={styles.loadingText}>Loading categories…</p>
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div style={styles.page}>
-        <h1>Categories</h1>
-        <p style={styles.errorText}>{error}</p>
-        <button onClick={loadCategories} style={styles.retryBtn}>
-          Retry
-        </button>
-      </div>
-    );
-  }
-
   return (
-    <div style={styles.page}>
-      <div style={styles.headerRow}>
-        <h1>Categories</h1>
-        <button onClick={handleOpenAddModal} style={styles.addBtn}>
-          + Add Category
-        </button>
-      </div>
+    <div>
+      <PageHeader
+        title="Categories"
+        subtitle="Manage food & beverage groups for customer menu filtering"
+        action={
+          <button className="btn btn-primary" onClick={handleOpenAddModal}>
+            <Plus size={16} />
+            Add Category
+          </button>
+        }
+      />
 
-      {actionError && <p style={styles.errorText}>{actionError}</p>}
+      {actionError && (
+        <div className="error-banner">
+          <AlertCircle size={15} />
+          <span>{actionError}</span>
+        </div>
+      )}
 
-      {categories.length === 0 ? (
-        <p style={styles.emptyText}>No categories found. Click "+ Add Category" to create one.</p>
-      ) : (
-        <table style={styles.table}>
-          <thead>
-            <tr>
-              <th style={styles.th}>ID</th>
-              <th style={styles.th}>Name</th>
-              <th style={styles.th}>Description</th>
-              <th style={styles.th}>Created At</th>
-              <th style={{ ...styles.th, textAlign: 'right' }}>Actions</th>
-            </tr>
-          </thead>
-          <tbody>
+      {loading && (
+        <div className="state-container">
+          <div className="spinner" />
+          <span className="state-title">Loading categories…</span>
+        </div>
+      )}
+
+      {error && !loading && (
+        <div>
+          <div className="error-banner">
+            <AlertCircle size={15} />
+            <span>{error}</span>
+          </div>
+          <button className="btn btn-secondary btn-sm" onClick={loadCategories}>
+            Retry
+          </button>
+        </div>
+      )}
+
+      {!loading && !error && categories.length === 0 && (
+        <div className="state-container card">
+          <Tag size={32} strokeWidth={1.25} style={{ opacity: 0.3 }} />
+          <span className="state-title">No categories found</span>
+          <span className="state-desc">Click "+ Add Category" to create one.</span>
+        </div>
+      )}
+
+      {!loading && !error && categories.length > 0 && (
+        <>
+          {/* Desktop Table */}
+          <div className="card hide-mobile" style={{ overflow: 'auto' }}>
+            <table className="qs-table">
+              <thead>
+                <tr>
+                  <th>ID</th>
+                  <th>Name</th>
+                  <th>Description</th>
+                  <th>Created At</th>
+                  <th style={{ textAlign: 'right' }}>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {categories.map((cat) => (
+                  <tr key={cat.id}>
+                    <td>
+                      <span style={{ color: 'var(--text-tertiary)', fontSize: '0.8125rem' }}>
+                        #{cat.id}
+                      </span>
+                    </td>
+                    <td>
+                      <strong style={{ fontSize: '0.9375rem' }}>{cat.name}</strong>
+                    </td>
+                    <td style={{ color: 'var(--text-secondary)', maxWidth: 360 }}>
+                      {cat.description || <span style={{ color: 'var(--text-tertiary)' }}>—</span>}
+                    </td>
+                    <td style={{ color: 'var(--text-secondary)', fontSize: '0.875rem' }}>
+                      {fmtDate(cat.createdAt)}
+                    </td>
+                    <td style={{ textAlign: 'right' }}>
+                      <div style={{ display: 'inline-flex', gap: '0.375rem' }}>
+                        <button
+                          onClick={() => handleOpenEditModal(cat)}
+                          className="btn btn-sm btn-secondary"
+                          aria-label="Edit category"
+                        >
+                          <Edit2 size={13} />
+                          Edit
+                        </button>
+                        <button
+                          onClick={() => handleDelete(cat.id, cat.name)}
+                          className="btn btn-sm btn-danger"
+                          aria-label="Delete category"
+                        >
+                          <Trash2 size={13} />
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          {/* Mobile Cards */}
+          <div className="show-mobile" style={{ flexDirection: 'column', gap: '0.75rem' }}>
             {categories.map((cat) => (
-              <tr key={cat.id} style={styles.tr}>
-                <td style={styles.td}>
-                  <strong>#{cat.id}</strong>
-                </td>
-                <td style={styles.td}>
-                  <strong>{cat.name}</strong>
-                </td>
-                <td style={styles.td}>{cat.description || '—'}</td>
-                <td style={styles.td}>{fmtDate(cat.createdAt)}</td>
-                <td style={{ ...styles.td, textAlign: 'right' }}>
-                  <button
-                    onClick={() => handleOpenEditModal(cat)}
-                    style={styles.editBtn}
+              <div key={cat.id} className="card card-body" style={{ padding: '1rem' }}>
+                <div
+                  style={{
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'flex-start',
+                    marginBottom: '0.375rem',
+                  }}
+                >
+                  <div>
+                    <strong style={{ fontSize: '1rem' }}>{cat.name}</strong>
+                    <span
+                      style={{
+                        fontSize: '0.75rem',
+                        color: 'var(--text-tertiary)',
+                        marginLeft: '0.5rem',
+                      }}
+                    >
+                      #{cat.id}
+                    </span>
+                  </div>
+                </div>
+
+                {cat.description && (
+                  <p
+                    style={{
+                      fontSize: '0.875rem',
+                      color: 'var(--text-secondary)',
+                      marginBottom: '0.75rem',
+                    }}
                   >
-                    Edit
-                  </button>
-                  <button
-                    onClick={() => handleDelete(cat.id, cat.name)}
-                    style={styles.deleteBtn}
-                  >
-                    Delete
-                  </button>
-                </td>
-              </tr>
+                    {cat.description}
+                  </p>
+                )}
+
+                <div
+                  style={{
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                    borderTop: '1px solid var(--border-light)',
+                    paddingTop: '0.75rem',
+                    marginTop: '0.5rem',
+                  }}
+                >
+                  <span style={{ fontSize: '0.8125rem', color: 'var(--text-tertiary)' }}>
+                    {fmtDate(cat.createdAt)}
+                  </span>
+                  <div style={{ display: 'flex', gap: '0.5rem' }}>
+                    <button
+                      onClick={() => handleOpenEditModal(cat)}
+                      className="btn btn-sm btn-secondary"
+                    >
+                      <Edit2 size={13} />
+                      Edit
+                    </button>
+                    <button
+                      onClick={() => handleDelete(cat.id, cat.name)}
+                      className="btn btn-sm btn-danger"
+                    >
+                      <Trash2 size={13} />
+                    </button>
+                  </div>
+                </div>
+              </div>
             ))}
-          </tbody>
-        </table>
+          </div>
+        </>
       )}
 
       {/* Add / Edit Category Modal */}
       {modalOpen && (
-        <div style={styles.overlay} onClick={handleCloseModal}>
-          <div style={styles.modal} onClick={(e) => e.stopPropagation()}>
-            <div style={styles.modalHeader}>
-              <h2 style={styles.modalTitle}>
-                {editingCategory ? 'Edit Category' : 'Add New Category'}
-              </h2>
-              <button onClick={handleCloseModal} style={styles.closeBtn}>✕</button>
+        <Modal
+          title={editingCategory ? 'Edit Category' : 'Add New Category'}
+          onClose={handleCloseModal}
+        >
+          <form onSubmit={handleSubmit} className="login-form" style={{ gap: '0.875rem' }}>
+            <div className="form-group">
+              <label className="form-label">Category Name *</label>
+              <input
+                type="text"
+                name="name"
+                value={formData.name}
+                onChange={handleInputChange}
+                required
+                maxLength={100}
+                className="form-input"
+                placeholder="e.g. Starters, Main Course, Drinks"
+                autoFocus
+              />
             </div>
 
-            <form onSubmit={handleSubmit} style={styles.form}>
-              <div style={styles.inputGroup}>
-                <label style={styles.label}>Category Name *</label>
-                <input
-                  type="text"
-                  name="name"
-                  value={formData.name}
-                  onChange={handleInputChange}
-                  required
-                  maxLength={100}
-                  style={styles.input}
-                  placeholder="e.g. Starters, Desserts, Beverages"
-                />
-              </div>
+            <div className="form-group">
+              <label className="form-label">Description (Optional)</label>
+              <textarea
+                name="description"
+                value={formData.description}
+                onChange={handleInputChange}
+                maxLength={500}
+                rows={3}
+                className="form-textarea"
+                placeholder="Describe this category"
+              />
+            </div>
 
-              <div style={styles.inputGroup}>
-                <label style={styles.label}>Description</label>
-                <textarea
-                  name="description"
-                  value={formData.description}
-                  onChange={handleInputChange}
-                  maxLength={500}
-                  rows={3}
-                  style={{ ...styles.input, resize: 'vertical' }}
-                  placeholder="Optional description"
-                />
-              </div>
-
-              <div style={styles.modalActions}>
-                <button
-                  type="button"
-                  onClick={handleCloseModal}
-                  style={styles.cancelBtn}
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  disabled={submitting}
-                  style={styles.submitBtn}
-                >
-                  {submitting ? 'Saving…' : editingCategory ? 'Update Category' : 'Create Category'}
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
+            <div
+              style={{
+                display: 'flex',
+                justifyContent: 'flex-end',
+                gap: '0.625rem',
+                marginTop: '1rem',
+                borderTop: '1px solid var(--border-light)',
+                paddingTop: '1rem',
+              }}
+            >
+              <button
+                type="button"
+                onClick={handleCloseModal}
+                className="btn btn-secondary"
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                disabled={submitting}
+                className="btn btn-primary"
+              >
+                {submitting
+                  ? 'Saving…'
+                  : editingCategory
+                  ? 'Update Category'
+                  : 'Create Category'}
+              </button>
+            </div>
+          </form>
+        </Modal>
       )}
     </div>
   );
-};
-
-const styles = {
-  page: {
-    padding: '1.5rem',
-    fontFamily: 'sans-serif',
-  },
-  headerRow: {
-    display: 'flex',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: '1.25rem',
-  },
-  addBtn: {
-    padding: '0.5rem 1rem',
-    backgroundColor: '#2563eb',
-    color: 'white',
-    border: 'none',
-    borderRadius: '4px',
-    cursor: 'pointer',
-    fontWeight: '600',
-    fontSize: '0.9rem',
-  },
-  table: {
-    width: '100%',
-    borderCollapse: 'collapse',
-    fontSize: '0.9rem',
-  },
-  th: {
-    textAlign: 'left',
-    padding: '0.65rem 0.75rem',
-    borderBottom: '2px solid #e5e7eb',
-    fontWeight: '600',
-    color: '#374151',
-    background: '#f9fafb',
-  },
-  tr: {
-    borderBottom: '1px solid #f3f4f6',
-  },
-  td: {
-    padding: '0.65rem 0.75rem',
-    verticalAlign: 'middle',
-    color: '#111827',
-  },
-  editBtn: {
-    padding: '0.35rem 0.75rem',
-    fontSize: '0.8rem',
-    backgroundColor: '#3b82f6',
-    color: 'white',
-    border: 'none',
-    borderRadius: '4px',
-    cursor: 'pointer',
-    fontWeight: '600',
-    marginRight: '0.5rem',
-  },
-  deleteBtn: {
-    padding: '0.35rem 0.75rem',
-    fontSize: '0.8rem',
-    backgroundColor: '#ef4444',
-    color: 'white',
-    border: 'none',
-    borderRadius: '4px',
-    cursor: 'pointer',
-    fontWeight: '600',
-  },
-  loadingText: {
-    color: '#6b7280',
-    fontStyle: 'italic',
-  },
-  errorText: {
-    color: '#dc2626',
-    marginTop: '0.5rem',
-    marginBottom: '0.5rem',
-  },
-  emptyText: {
-    color: '#9ca3af',
-    marginTop: '1rem',
-    fontStyle: 'italic',
-  },
-  retryBtn: {
-    marginTop: '0.75rem',
-    padding: '0.4rem 1rem',
-    background: '#3b82f6',
-    color: 'white',
-    border: 'none',
-    borderRadius: '4px',
-    cursor: 'pointer',
-  },
-  // Modal
-  overlay: {
-    position: 'fixed',
-    inset: 0,
-    background: 'rgba(0,0,0,0.45)',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    zIndex: 1000,
-  },
-  modal: {
-    background: 'white',
-    borderRadius: '8px',
-    padding: '1.75rem',
-    width: '100%',
-    maxWidth: '500px',
-    maxHeight: '90vh',
-    overflowY: 'auto',
-    boxShadow: '0 20px 60px rgba(0,0,0,0.2)',
-  },
-  modalHeader: {
-    display: 'flex',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: '1rem',
-  },
-  modalTitle: {
-    margin: 0,
-    fontSize: '1.25rem',
-    fontWeight: '700',
-    color: '#111827',
-  },
-  closeBtn: {
-    background: 'none',
-    border: 'none',
-    fontSize: '1.25rem',
-    cursor: 'pointer',
-    color: '#6b7280',
-    lineHeight: 1,
-  },
-  form: {
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '0.9rem',
-  },
-  inputGroup: {
-    display: 'flex',
-    flexDirection: 'column',
-  },
-  label: {
-    fontSize: '0.85rem',
-    fontWeight: '600',
-    color: '#374151',
-    marginBottom: '0.25rem',
-  },
-  input: {
-    padding: '0.5rem 0.75rem',
-    border: '1px solid #d1d5db',
-    borderRadius: '4px',
-    fontSize: '0.9rem',
-  },
-  modalActions: {
-    display: 'flex',
-    justifyContent: 'flex-end',
-    gap: '0.5rem',
-    marginTop: '0.75rem',
-  },
-  cancelBtn: {
-    padding: '0.5rem 1rem',
-    border: '1px solid #d1d5db',
-    background: 'white',
-    borderRadius: '4px',
-    cursor: 'pointer',
-    fontSize: '0.9rem',
-  },
-  submitBtn: {
-    padding: '0.5rem 1rem',
-    backgroundColor: '#2563eb',
-    color: 'white',
-    border: 'none',
-    borderRadius: '4px',
-    cursor: 'pointer',
-    fontWeight: '600',
-    fontSize: '0.9rem',
-  },
 };
 
 export default Categories;

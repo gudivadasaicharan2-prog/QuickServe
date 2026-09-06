@@ -1,12 +1,15 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { ChefHat, Eye, EyeOff, AlertCircle } from 'lucide-react';
 import { saveToken } from '../utils/authService';
+import './Login.css';
 
 const BASE_URL = 'http://localhost:8080';
 
 const Login = () => {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
@@ -19,17 +22,13 @@ const Login = () => {
     try {
       const response = await fetch(`${BASE_URL}/api/auth/login`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ username, password }),
       });
 
       if (!response.ok) {
-        if (response.status === 401) {
-          throw new Error('Invalid username or password');
-        }
-        throw new Error('Failed to login. Please try again later.');
+        if (response.status === 401) throw new Error('Invalid username or password');
+        throw new Error('Login failed. Please try again.');
       }
 
       const data = await response.json();
@@ -47,82 +46,87 @@ const Login = () => {
   };
 
   return (
-    <div className="login-container" style={styles.container}>
-      <form onSubmit={handleLogin} style={styles.form}>
-        <h2>Owner Login</h2>
-        {error && <p style={styles.error}>{error}</p>}
-        
-        <div style={styles.inputGroup}>
-          <label>Username:</label>
-          <input
-            type="text"
-            value={username}
-            onChange={(e) => setUsername(e.target.value)}
-            required
-            style={styles.input}
-          />
+    <div className="login-page">
+      <div className="login-card">
+        {/* Brand */}
+        <div className="login-brand">
+          <div className="login-brand__icon">
+            <ChefHat size={24} strokeWidth={2} />
+          </div>
+          <div>
+            <h1 className="login-brand__name">QuickServe</h1>
+            <p className="login-brand__sub">Restaurant Management</p>
+          </div>
         </div>
 
-        <div style={styles.inputGroup}>
-          <label>Password:</label>
-          <input
-            type="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            required
-            style={styles.input}
-          />
-        </div>
+        <div className="login-divider" />
 
-        <button type="submit" disabled={loading} style={styles.button}>
-          {loading ? 'Logging in...' : 'Login'}
-        </button>
-      </form>
+        <h2 className="login-title">Owner Login</h2>
+        <p className="login-subtitle">Sign in to manage your restaurant</p>
+
+        {error && (
+          <div className="login-error" role="alert">
+            <AlertCircle size={15} />
+            <span>{error}</span>
+          </div>
+        )}
+
+        <form onSubmit={handleLogin} className="login-form">
+          <div className="form-group">
+            <label className="form-label" htmlFor="username">Username</label>
+            <input
+              id="username"
+              type="text"
+              className="form-input"
+              value={username}
+              onChange={e => setUsername(e.target.value)}
+              placeholder="Enter your username"
+              required
+              autoComplete="username"
+              autoFocus
+            />
+          </div>
+
+          <div className="form-group" style={{ marginTop: '1rem' }}>
+            <label className="form-label" htmlFor="password">Password</label>
+            <div className="login-password-wrap">
+              <input
+                id="password"
+                type={showPassword ? 'text' : 'password'}
+                className="form-input"
+                value={password}
+                onChange={e => setPassword(e.target.value)}
+                placeholder="Enter your password"
+                required
+                autoComplete="current-password"
+              />
+              <button
+                type="button"
+                className="login-password-toggle"
+                onClick={() => setShowPassword(v => !v)}
+                aria-label={showPassword ? 'Hide password' : 'Show password'}
+              >
+                {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+              </button>
+            </div>
+          </div>
+
+          <button
+            type="submit"
+            className="btn btn-primary login-submit"
+            disabled={loading}
+          >
+            {loading ? (
+              <>
+                <span className="spinner" style={{ width: 16, height: 16 }} />
+                Signing in…
+              </>
+            ) : 'Sign in'}
+          </button>
+        </form>
+      </div>
     </div>
   );
-};
-
-const styles = {
-  container: {
-    display: 'flex',
-    justifyContent: 'center',
-    alignItems: 'center',
-    height: '100vh',
-    backgroundColor: '#f5f5f5',
-  },
-  form: {
-    padding: '2rem',
-    background: 'white',
-    borderRadius: '8px',
-    boxShadow: '0 4px 6px rgba(0,0,0,0.1)',
-    width: '100%',
-    maxWidth: '400px',
-  },
-  inputGroup: {
-    marginBottom: '1rem',
-    display: 'flex',
-    flexDirection: 'column',
-  },
-  input: {
-    padding: '0.5rem',
-    fontSize: '1rem',
-    marginTop: '0.25rem',
-  },
-  button: {
-    width: '100%',
-    padding: '0.75rem',
-    fontSize: '1rem',
-    backgroundColor: '#007bff',
-    color: 'white',
-    border: 'none',
-    borderRadius: '4px',
-    cursor: 'pointer',
-    marginTop: '1rem',
-  },
-  error: {
-    color: 'red',
-    marginBottom: '1rem',
-  },
 };
 
 export default Login;

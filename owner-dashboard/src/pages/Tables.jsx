@@ -1,29 +1,11 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import fetchApi from '../utils/fetchApi';
+import PageHeader from '../components/PageHeader';
+import StatusBadge from '../components/StatusBadge';
+import Modal from '../components/Modal';
+import { Plus, TableProperties, Users, QrCode, Edit2, Trash2, AlertCircle, Power } from 'lucide-react';
 
 const TABLE_STATUSES = ['AVAILABLE', 'OCCUPIED', 'RESERVED'];
-
-const STATUS_COLORS = {
-  AVAILABLE: '#10b981',
-  OCCUPIED: '#f59e0b',
-  RESERVED: '#3b82f6',
-};
-
-const fmtDate = (dateStr) => {
-  if (!dateStr) return '—';
-  return new Date(dateStr).toLocaleString();
-};
-
-const StatusBadge = ({ status }) => (
-  <span
-    style={{
-      ...styles.badge,
-      backgroundColor: STATUS_COLORS[status] || '#6b7280',
-    }}
-  >
-    {status}
-  </span>
-);
 
 const Tables = () => {
   const [tables, setTables] = useState([]);
@@ -35,7 +17,7 @@ const Tables = () => {
 
   // Modal State for Add / Edit
   const [modalOpen, setModalOpen] = useState(false);
-  const [editingTable, setEditingTable] = useState(null); // null when adding, table object when editing
+  const [editingTable, setEditingTable] = useState(null);
   const [formData, setFormData] = useState({
     tableNumber: '',
     capacity: '',
@@ -118,7 +100,6 @@ const Tables = () => {
         [name]: type === 'checkbox' ? checked : value,
       };
 
-      // Auto-suggest QR code when tableNumber changes and user is adding a table
       if (name === 'tableNumber' && !editingTable && value) {
         updated.qrCode = `QS-TABLE-${String(value).padStart(3, '0')}`;
       }
@@ -142,7 +123,6 @@ const Tables = () => {
 
     try {
       if (editingTable) {
-        // Update existing table (PUT /api/tables/{id})
         const updated = await fetchApi(`/api/tables/${editingTable.id}`, {
           method: 'PUT',
           body: payload,
@@ -153,7 +133,6 @@ const Tables = () => {
             .sort((a, b) => a.tableNumber - b.tableNumber)
         );
       } else {
-        // Create new table (POST /api/tables)
         const created = await fetchApi('/api/tables', {
           method: 'POST',
           body: payload,
@@ -164,7 +143,9 @@ const Tables = () => {
       }
       handleCloseModal();
     } catch (err) {
-      setActionError(`Failed to ${editingTable ? 'update' : 'create'} table: ${err.message}`);
+      setActionError(
+        `Failed to ${editingTable ? 'update' : 'create'} table: ${err.message}`
+      );
     } finally {
       setSubmitting(false);
     }
@@ -181,7 +162,9 @@ const Tables = () => {
         prev.map((t) => (t.id === table.id ? updated : t))
       );
     } catch (err) {
-      setActionError(`Failed to ${table.active ? 'deactivate' : 'activate'} Table #${table.tableNumber}: ${err.message}`);
+      setActionError(
+        `Failed to ${table.active ? 'deactivate' : 'activate'} Table #${table.tableNumber}: ${err.message}`
+      );
     }
   };
 
@@ -204,12 +187,16 @@ const Tables = () => {
         prev.map((t) => (t.id === table.id ? updated : t))
       );
     } catch (err) {
-      setActionError(`Failed to update status for Table #${table.tableNumber}: ${err.message}`);
+      setActionError(
+        `Failed to update status for Table #${table.tableNumber}: ${err.message}`
+      );
     }
   };
 
   const handleDelete = async (id, tableNumber) => {
-    if (!window.confirm(`Are you sure you want to permanently delete Table #${tableNumber}?`)) {
+    if (
+      !window.confirm(`Are you sure you want to permanently delete Table #${tableNumber}?`)
+    ) {
       return;
     }
     setActionError(null);
@@ -221,475 +208,351 @@ const Tables = () => {
     }
   };
 
-  if (loading) {
-    return (
-      <div style={styles.page}>
-        <h1>Tables Management</h1>
-        <p style={styles.loadingText}>Loading tables…</p>
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div style={styles.page}>
-        <h1>Tables Management</h1>
-        <p style={styles.errorText}>{error}</p>
-        <button onClick={() => loadTables('ALL')} style={styles.retryBtn}>
-          Retry
-        </button>
-      </div>
-    );
-  }
-
   return (
-    <div style={styles.page}>
-      <div style={styles.headerRow}>
-        <h1>Tables Management</h1>
-        <button onClick={handleOpenAddModal} style={styles.addBtn}>
-          + Add Table
-        </button>
-      </div>
+    <div>
+      <PageHeader
+        title="Tables Management"
+        subtitle="Manage restaurant tables, seating capacity, QR identifiers, and occupancy"
+        action={
+          <button className="btn btn-primary" onClick={handleOpenAddModal}>
+            <Plus size={16} />
+            Add Table
+          </button>
+        }
+      />
 
-      {actionError && <p style={styles.errorText}>{actionError}</p>}
+      {actionError && (
+        <div className="error-banner">
+          <AlertCircle size={15} />
+          <span>{actionError}</span>
+        </div>
+      )}
 
-      {/* Status filter tabs */}
-      <div style={styles.filterRow}>
+      {/* Filter pills */}
+      <div className="filter-pills" style={{ marginBottom: '1.25rem' }}>
         {['ALL', ...TABLE_STATUSES].map((s) => (
           <button
             key={s}
+            className={`filter-pill${statusFilter === s ? ' active' : ''}`}
             onClick={() => handleFilterChange(s)}
             disabled={filterLoading}
-            style={{
-              ...styles.filterBtn,
-              ...(statusFilter === s ? styles.filterBtnActive : {}),
-              ...(s !== 'ALL' ? { borderBottom: `3px solid ${STATUS_COLORS[s]}` } : {}),
-            }}
           >
-            {s}
+            {s === 'ALL' ? 'All Tables' : s}
           </button>
         ))}
       </div>
 
-      {filterLoading && <p style={styles.loadingText}>Filtering…</p>}
+      {loading && (
+        <div className="state-container">
+          <div className="spinner" />
+          <span className="state-title">Loading tables…</span>
+        </div>
+      )}
 
-      {/* Tables list */}
-      {!filterLoading && tables.length === 0 ? (
-        <p style={styles.emptyText}>No tables found for status: {statusFilter}</p>
-      ) : (
-        <table style={styles.table}>
-          <thead>
-            <tr>
-              <th style={styles.th}>Table #</th>
-              <th style={{ ...styles.th, textAlign: 'center' }}>Capacity</th>
-              <th style={styles.th}>QR Code</th>
-              <th style={{ ...styles.th, textAlign: 'center' }}>Status</th>
-              <th style={{ ...styles.th, textAlign: 'center' }}>Active</th>
-              <th style={styles.th}>Created At</th>
-              <th style={{ ...styles.th, textAlign: 'right' }}>Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {tables.map((tbl) => (
-              <tr key={tbl.id} style={styles.tr}>
-                <td style={styles.td}>
-                  <strong>Table #{tbl.tableNumber}</strong>
-                </td>
-                <td style={{ ...styles.td, textAlign: 'center' }}>
-                  {tbl.capacity} seats
-                </td>
-                <td style={styles.td}>
-                  <code style={styles.code}>{tbl.qrCode}</code>
-                </td>
-                <td style={{ ...styles.td, textAlign: 'center' }}>
-                  <select
-                    value={tbl.status}
-                    onChange={(e) => handleQuickStatusChange(tbl, e.target.value)}
-                    style={{
-                      ...styles.statusSelect,
-                      backgroundColor: STATUS_COLORS[tbl.status] || '#6b7280',
-                    }}
-                  >
-                    {TABLE_STATUSES.map((st) => (
-                      <option key={st} value={st}>
-                        {st}
-                      </option>
-                    ))}
-                  </select>
-                </td>
-                <td style={{ ...styles.td, textAlign: 'center' }}>
-                  <span
-                    style={{
-                      ...styles.badge,
-                      backgroundColor: tbl.active ? '#10b981' : '#9ca3af',
-                    }}
-                  >
-                    {tbl.active ? 'Active' : 'Inactive'}
-                  </span>
-                </td>
-                <td style={styles.td}>{fmtDate(tbl.createdAt)}</td>
-                <td style={{ ...styles.td, textAlign: 'right' }}>
-                  <button
-                    onClick={() => handleToggleActive(tbl)}
-                    style={{
-                      ...styles.actionBtn,
-                      backgroundColor: tbl.active ? '#f59e0b' : '#10b981',
-                    }}
-                  >
-                    {tbl.active ? 'Deactivate' : 'Activate'}
-                  </button>
-                  <button
-                    onClick={() => handleOpenEditModal(tbl)}
-                    style={styles.editBtn}
-                  >
-                    Edit
-                  </button>
-                  <button
-                    onClick={() => handleDelete(tbl.id, tbl.tableNumber)}
-                    style={styles.deleteBtn}
-                  >
-                    Delete
-                  </button>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+      {error && !loading && (
+        <div>
+          <div className="error-banner">
+            <AlertCircle size={15} />
+            <span>{error}</span>
+          </div>
+          <button className="btn btn-secondary btn-sm" onClick={() => loadTables('ALL')}>
+            Retry
+          </button>
+        </div>
+      )}
+
+      {!loading && !error && (
+        <>
+          {filterLoading && (
+            <div
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.5rem',
+                marginBottom: '0.75rem',
+                color: 'var(--text-secondary)',
+                fontSize: '0.875rem',
+              }}
+            >
+              <div className="spinner" style={{ width: 14, height: 14 }} />
+              Filtering tables…
+            </div>
+          )}
+
+          {!filterLoading && tables.length === 0 ? (
+            <div className="state-container card">
+              <TableProperties size={32} strokeWidth={1.25} style={{ opacity: 0.3 }} />
+              <span className="state-title">No tables found</span>
+              <span className="state-desc">No tables matching status: {statusFilter}</span>
+            </div>
+          ) : (
+            <>
+              {/* Responsive Grid layout for tables */}
+              <div
+                style={{
+                  display: 'grid',
+                  gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))',
+                  gap: '1rem',
+                  marginBottom: '1.5rem',
+                }}
+              >
+                {tables.map((tbl) => (
+                  <div key={tbl.id} className="card card-body" style={{ padding: '1.25rem' }}>
+                    <div
+                      style={{
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        alignItems: 'flex-start',
+                        marginBottom: '0.75rem',
+                      }}
+                    >
+                      <div>
+                        <h3 style={{ fontSize: '1.15rem', fontWeight: 600 }}>
+                          Table {tbl.tableNumber}
+                        </h3>
+                        <div
+                          style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '0.35rem',
+                            color: 'var(--text-secondary)',
+                            fontSize: '0.8125rem',
+                            marginTop: '0.2rem',
+                          }}
+                        >
+                          <Users size={14} />
+                          <span>{tbl.capacity} seats</span>
+                        </div>
+                      </div>
+
+                      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '0.25rem' }}>
+                        <StatusBadge status={tbl.status} />
+                        <span
+                          style={{
+                            fontSize: '0.7rem',
+                            fontWeight: 500,
+                            color: tbl.active ? 'var(--success)' : 'var(--text-tertiary)',
+                          }}
+                        >
+                          {tbl.active ? '● Active' : '○ Inactive'}
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* QR Identifier */}
+                    <div
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '0.4rem',
+                        background: 'var(--surface-2)',
+                        padding: '0.45rem 0.65rem',
+                        borderRadius: 'var(--radius-sm)',
+                        fontSize: '0.8125rem',
+                        color: 'var(--text-secondary)',
+                        marginBottom: '1rem',
+                      }}
+                    >
+                      <QrCode size={14} style={{ color: 'var(--text-tertiary)' }} />
+                      <code style={{ fontSize: '0.8125rem', color: 'var(--text-primary)' }}>
+                        {tbl.qrCode}
+                      </code>
+                    </div>
+
+                    {/* Quick status change */}
+                    <div style={{ marginBottom: '1rem' }}>
+                      <label className="form-label" style={{ fontSize: '0.75rem' }}>
+                        Change Status
+                      </label>
+                      <select
+                        value={tbl.status}
+                        onChange={(e) => handleQuickStatusChange(tbl, e.target.value)}
+                        className="form-select"
+                        style={{ fontSize: '0.8125rem', padding: '0.4rem 0.75rem' }}
+                      >
+                        {TABLE_STATUSES.map((st) => (
+                          <option key={st} value={st}>
+                            {st}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+
+                    {/* Actions */}
+                    <div
+                      style={{
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        alignItems: 'center',
+                        borderTop: '1px solid var(--border-light)',
+                        paddingTop: '0.75rem',
+                      }}
+                    >
+                      <button
+                        onClick={() => handleToggleActive(tbl)}
+                        className={`btn btn-sm ${tbl.active ? 'btn-secondary' : 'btn-success'}`}
+                        title={tbl.active ? 'Deactivate table' : 'Activate table'}
+                      >
+                        <Power size={13} />
+                        {tbl.active ? 'Deactivate' : 'Activate'}
+                      </button>
+
+                      <div style={{ display: 'flex', gap: '0.375rem' }}>
+                        <button
+                          onClick={() => handleOpenEditModal(tbl)}
+                          className="btn btn-sm btn-secondary"
+                          aria-label="Edit table"
+                        >
+                          <Edit2 size={13} />
+                        </button>
+                        <button
+                          onClick={() => handleDelete(tbl.id, tbl.tableNumber)}
+                          className="btn btn-sm btn-danger"
+                          aria-label="Delete table"
+                        >
+                          <Trash2 size={13} />
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </>
+          )}
+        </>
       )}
 
       {/* Add / Edit Table Modal */}
       {modalOpen && (
-        <div style={styles.overlay} onClick={handleCloseModal}>
-          <div style={styles.modal} onClick={(e) => e.stopPropagation()}>
-            <div style={styles.modalHeader}>
-              <h2 style={styles.modalTitle}>
-                {editingTable ? `Edit Table #${editingTable.tableNumber}` : 'Add New Table'}
-              </h2>
-              <button onClick={handleCloseModal} style={styles.closeBtn}>✕</button>
-            </div>
-
-            <form onSubmit={handleSubmit} style={styles.form}>
-              <div style={{ display: 'flex', gap: '1rem' }}>
-                <div style={{ ...styles.inputGroup, flex: 1 }}>
-                  <label style={styles.label}>Table Number *</label>
-                  <input
-                    type="number"
-                    name="tableNumber"
-                    value={formData.tableNumber}
-                    onChange={handleInputChange}
-                    required
-                    min="1"
-                    style={styles.input}
-                    placeholder="e.g. 1"
-                  />
-                </div>
-
-                <div style={{ ...styles.inputGroup, flex: 1 }}>
-                  <label style={styles.label}>Capacity (Seats) *</label>
-                  <input
-                    type="number"
-                    name="capacity"
-                    value={formData.capacity}
-                    onChange={handleInputChange}
-                    required
-                    min="1"
-                    style={styles.input}
-                    placeholder="e.g. 4"
-                  />
-                </div>
-              </div>
-
-              <div style={styles.inputGroup}>
-                <label style={styles.label}>QR Code Identifier *</label>
+        <Modal
+          title={editingTable ? `Edit Table ${editingTable.tableNumber}` : 'Add New Table'}
+          onClose={handleCloseModal}
+        >
+          <form onSubmit={handleSubmit} className="login-form" style={{ gap: '0.875rem' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
+              <div className="form-group">
+                <label className="form-label">Table Number *</label>
                 <input
-                  type="text"
-                  name="qrCode"
-                  value={formData.qrCode}
+                  type="number"
+                  name="tableNumber"
+                  value={formData.tableNumber}
                   onChange={handleInputChange}
                   required
-                  maxLength={500}
-                  style={styles.input}
-                  placeholder="e.g. QS-TABLE-001"
+                  min="1"
+                  className="form-input"
+                  placeholder="e.g. 1"
+                  autoFocus
                 />
               </div>
 
-              <div style={styles.inputGroup}>
-                <label style={styles.label}>Initial Status</label>
-                <select
-                  name="status"
-                  value={formData.status}
-                  onChange={handleInputChange}
-                  style={styles.input}
-                >
-                  {TABLE_STATUSES.map((st) => (
-                    <option key={st} value={st}>
-                      {st}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <div style={{ ...styles.inputGroup, flexDirection: 'row', alignItems: 'center', gap: '0.5rem' }}>
+              <div className="form-group">
+                <label className="form-label">Capacity (Seats) *</label>
                 <input
-                  type="checkbox"
-                  id="active"
-                  name="active"
-                  checked={formData.active}
+                  type="number"
+                  name="capacity"
+                  value={formData.capacity}
                   onChange={handleInputChange}
+                  required
+                  min="1"
+                  className="form-input"
+                  placeholder="e.g. 4"
                 />
-                <label htmlFor="active" style={{ ...styles.label, marginBottom: 0, cursor: 'pointer' }}>
-                  Active (Available for customer orders)
-                </label>
               </div>
+            </div>
 
-              <div style={styles.modalActions}>
-                <button
-                  type="button"
-                  onClick={handleCloseModal}
-                  style={styles.cancelBtn}
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  disabled={submitting}
-                  style={styles.submitBtn}
-                >
-                  {submitting ? 'Saving…' : editingTable ? 'Update Table' : 'Create Table'}
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
+            <div className="form-group">
+              <label className="form-label">QR Code Identifier *</label>
+              <input
+                type="text"
+                name="qrCode"
+                value={formData.qrCode}
+                onChange={handleInputChange}
+                required
+                maxLength={500}
+                className="form-input"
+                placeholder="e.g. QS-TABLE-001"
+              />
+            </div>
+
+            <div className="form-group">
+              <label className="form-label">Initial Status</label>
+              <select
+                name="status"
+                value={formData.status}
+                onChange={handleInputChange}
+                className="form-select"
+              >
+                {TABLE_STATUSES.map((st) => (
+                  <option key={st} value={st}>
+                    {st}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.5rem',
+                marginTop: '0.25rem',
+              }}
+            >
+              <input
+                type="checkbox"
+                id="active"
+                name="active"
+                checked={formData.active}
+                onChange={handleInputChange}
+                style={{ width: 16, height: 16, accentColor: 'var(--brand)' }}
+              />
+              <label
+                htmlFor="active"
+                style={{
+                  fontSize: '0.875rem',
+                  color: 'var(--text-primary)',
+                  cursor: 'pointer',
+                  userSelect: 'none',
+                }}
+              >
+                Active (Available for customer orders)
+              </label>
+            </div>
+
+            <div
+              style={{
+                display: 'flex',
+                justifyContent: 'flex-end',
+                gap: '0.625rem',
+                marginTop: '1rem',
+                borderTop: '1px solid var(--border-light)',
+                paddingTop: '1rem',
+              }}
+            >
+              <button
+                type="button"
+                onClick={handleCloseModal}
+                className="btn btn-secondary"
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                disabled={submitting}
+                className="btn btn-primary"
+              >
+                {submitting
+                  ? 'Saving…'
+                  : editingTable
+                  ? 'Update Table'
+                  : 'Create Table'}
+              </button>
+            </div>
+          </form>
+        </Modal>
       )}
     </div>
   );
-};
-
-const styles = {
-  page: {
-    padding: '1.5rem',
-    fontFamily: 'sans-serif',
-  },
-  headerRow: {
-    display: 'flex',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: '1.25rem',
-  },
-  addBtn: {
-    padding: '0.5rem 1rem',
-    backgroundColor: '#2563eb',
-    color: 'white',
-    border: 'none',
-    borderRadius: '4px',
-    cursor: 'pointer',
-    fontWeight: '600',
-    fontSize: '0.9rem',
-  },
-  filterRow: {
-    display: 'flex',
-    flexWrap: 'wrap',
-    gap: '0.5rem',
-    marginBottom: '1.25rem',
-  },
-  filterBtn: {
-    padding: '0.4rem 0.9rem',
-    border: '1px solid #d1d5db',
-    borderRadius: '4px',
-    background: 'white',
-    cursor: 'pointer',
-    fontSize: '0.85rem',
-  },
-  filterBtnActive: {
-    background: '#1e293b',
-    color: 'white',
-    borderColor: '#1e293b',
-  },
-  table: {
-    width: '100%',
-    borderCollapse: 'collapse',
-    fontSize: '0.9rem',
-  },
-  th: {
-    textAlign: 'left',
-    padding: '0.65rem 0.75rem',
-    borderBottom: '2px solid #e5e7eb',
-    fontWeight: '600',
-    color: '#374151',
-    background: '#f9fafb',
-  },
-  tr: {
-    borderBottom: '1px solid #f3f4f6',
-  },
-  td: {
-    padding: '0.65rem 0.75rem',
-    verticalAlign: 'middle',
-    color: '#111827',
-  },
-  code: {
-    background: '#f3f4f6',
-    padding: '0.2rem 0.4rem',
-    borderRadius: '4px',
-    fontSize: '0.85rem',
-    color: '#1f2937',
-  },
-  badge: {
-    display: 'inline-block',
-    padding: '0.2rem 0.55rem',
-    borderRadius: '999px',
-    fontSize: '0.75rem',
-    fontWeight: '600',
-    color: 'white',
-  },
-  statusSelect: {
-    padding: '0.25rem 0.5rem',
-    borderRadius: '4px',
-    fontSize: '0.8rem',
-    fontWeight: '600',
-    color: 'white',
-    border: 'none',
-    cursor: 'pointer',
-  },
-  actionBtn: {
-    padding: '0.35rem 0.7rem',
-    fontSize: '0.8rem',
-    color: 'white',
-    border: 'none',
-    borderRadius: '4px',
-    cursor: 'pointer',
-    fontWeight: '600',
-    marginRight: '0.5rem',
-  },
-  editBtn: {
-    padding: '0.35rem 0.75rem',
-    fontSize: '0.8rem',
-    backgroundColor: '#3b82f6',
-    color: 'white',
-    border: 'none',
-    borderRadius: '4px',
-    cursor: 'pointer',
-    fontWeight: '600',
-    marginRight: '0.5rem',
-  },
-  deleteBtn: {
-    padding: '0.35rem 0.75rem',
-    fontSize: '0.8rem',
-    backgroundColor: '#ef4444',
-    color: 'white',
-    border: 'none',
-    borderRadius: '4px',
-    cursor: 'pointer',
-    fontWeight: '600',
-  },
-  loadingText: {
-    color: '#6b7280',
-    fontStyle: 'italic',
-  },
-  errorText: {
-    color: '#dc2626',
-    marginTop: '0.5rem',
-    marginBottom: '0.5rem',
-  },
-  emptyText: {
-    color: '#9ca3af',
-    marginTop: '1rem',
-    fontStyle: 'italic',
-  },
-  retryBtn: {
-    marginTop: '0.75rem',
-    padding: '0.4rem 1rem',
-    background: '#3b82f6',
-    color: 'white',
-    border: 'none',
-    borderRadius: '4px',
-    cursor: 'pointer',
-  },
-  // Modal
-  overlay: {
-    position: 'fixed',
-    inset: 0,
-    background: 'rgba(0,0,0,0.45)',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    zIndex: 1000,
-  },
-  modal: {
-    background: 'white',
-    borderRadius: '8px',
-    padding: '1.75rem',
-    width: '100%',
-    maxWidth: '500px',
-    maxHeight: '90vh',
-    overflowY: 'auto',
-    boxShadow: '0 20px 60px rgba(0,0,0,0.2)',
-  },
-  modalHeader: {
-    display: 'flex',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: '1rem',
-  },
-  modalTitle: {
-    margin: 0,
-    fontSize: '1.25rem',
-    fontWeight: '700',
-    color: '#111827',
-  },
-  closeBtn: {
-    background: 'none',
-    border: 'none',
-    fontSize: '1.25rem',
-    cursor: 'pointer',
-    color: '#6b7280',
-    lineHeight: 1,
-  },
-  form: {
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '0.9rem',
-  },
-  inputGroup: {
-    display: 'flex',
-    flexDirection: 'column',
-  },
-  label: {
-    fontSize: '0.85rem',
-    fontWeight: '600',
-    color: '#374151',
-    marginBottom: '0.25rem',
-  },
-  input: {
-    padding: '0.5rem 0.75rem',
-    border: '1px solid #d1d5db',
-    borderRadius: '4px',
-    fontSize: '0.9rem',
-  },
-  modalActions: {
-    display: 'flex',
-    justifyContent: 'flex-end',
-    gap: '0.5rem',
-    marginTop: '0.75rem',
-  },
-  cancelBtn: {
-    padding: '0.5rem 1rem',
-    border: '1px solid #d1d5db',
-    background: 'white',
-    borderRadius: '4px',
-    cursor: 'pointer',
-    fontSize: '0.9rem',
-  },
-  submitBtn: {
-    padding: '0.5rem 1rem',
-    backgroundColor: '#2563eb',
-    color: 'white',
-    border: 'none',
-    borderRadius: '4px',
-    cursor: 'pointer',
-    fontWeight: '600',
-    fontSize: '0.9rem',
-  },
 };
 
 export default Tables;
