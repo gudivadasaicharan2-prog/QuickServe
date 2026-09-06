@@ -47,11 +47,37 @@ public class GlobalExceptionHandler {
         return buildError(HttpStatus.BAD_REQUEST, "Invalid Parameter", msg, null);
     }
 
-    // ── 409 Conflict (duplicate name) ───────────────────────────────────────────
+    // ── 403 Forbidden (Location validation failure) ────────────────────────────
+
+    @ExceptionHandler(LocationException.class)
+    public ResponseEntity<Map<String, Object>> handleLocationException(LocationException ex) {
+        return buildError(HttpStatus.FORBIDDEN, "Forbidden", ex.getMessage(), null);
+    }
+
+    // ── 403 Forbidden (Session invalid or closed) ───────────────────────────────
+
+    @ExceptionHandler(SessionException.class)
+    public ResponseEntity<Map<String, Object>> handleSessionException(SessionException ex) {
+        return buildError(HttpStatus.FORBIDDEN, "Forbidden", ex.getMessage(), null);
+    }
+
+    // ── 409 Conflict (duplicate name or table already occupied) ───────────────────
 
     @ExceptionHandler(DuplicateResourceException.class)
     public ResponseEntity<Map<String, Object>> handleDuplicate(DuplicateResourceException ex) {
         return buildError(HttpStatus.CONFLICT, "Conflict", ex.getMessage(), null);
+    }
+
+    @ExceptionHandler(IllegalStateException.class)
+    public ResponseEntity<Map<String, Object>> handleIllegalState(IllegalStateException ex) {
+        return buildError(HttpStatus.CONFLICT, "Conflict", ex.getMessage(), null);
+    }
+
+    // ── 400 Bad Request (business validation) ───────────────────────────────────
+
+    @ExceptionHandler(IllegalArgumentException.class)
+    public ResponseEntity<Map<String, Object>> handleIllegalArgument(IllegalArgumentException ex) {
+        return buildError(HttpStatus.BAD_REQUEST, "Bad Request", ex.getMessage(), null);
     }
 
     // ── 500 Fallback ─────────────────────────────────────────────────────────────

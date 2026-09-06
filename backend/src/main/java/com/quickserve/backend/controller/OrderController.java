@@ -22,10 +22,15 @@ public class OrderController {
 
     /**
      * POST /api/orders
-     * Places a new order.
+     * Places a new order. Requires an active table session.
      */
     @PostMapping
-    public ResponseEntity<OrderResponse> placeOrder(@Valid @RequestBody OrderRequest request) {
+    public ResponseEntity<OrderResponse> placeOrder(
+            @RequestHeader(value = "X-Session-Token", required = false) String sessionTokenHeader,
+            @Valid @RequestBody OrderRequest request) {
+        if (request.getSessionToken() == null && sessionTokenHeader != null) {
+            request.setSessionToken(sessionTokenHeader);
+        }
         OrderResponse created = orderService.placeOrder(request);
         return ResponseEntity.status(HttpStatus.CREATED).body(created);
     }

@@ -4,11 +4,17 @@ import API_URL from './api';
  * Creates a new service request (e.g. CALL_WAITER, REQUEST_BILL, WATER, CUTLERY, TISSUE)
  * @param {{ tableNumber: string, requestType: string, notes?: string }} payload
  */
-export async function createServiceRequest(payload) {
+export async function createServiceRequest(payload, sessionToken) {
+  const token = sessionToken || localStorage.getItem('qs_session_token');
+  const headers = { 'Content-Type': 'application/json' };
+  if (token) {
+    headers['X-Session-Token'] = token;
+  }
+
   const response = await fetch(`${API_URL}/requests`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(payload),
+    headers,
+    body: JSON.stringify({ ...payload, sessionToken: token }),
   });
 
   if (!response.ok) {

@@ -34,7 +34,7 @@ const Login = () => {
       const data = await response.json();
       if (data.token) {
         saveToken(data.token);
-        navigate('/');
+        navigate('/', { replace: true });
       } else {
         throw new Error('Invalid response from server');
       }

@@ -38,6 +38,15 @@ public class RestaurantTableController {
     }
 
     /**
+     * GET /api/tables/public
+     * Public endpoint for customer app to view tables and availability.
+     */
+    @GetMapping("/public")
+    public ResponseEntity<List<RestaurantTableResponse>> getPublicTables() {
+        return ResponseEntity.ok(tableService.getAllTables());
+    }
+
+    /**
      * GET /api/tables/{id}
      * Returns a single table by ID.
      */

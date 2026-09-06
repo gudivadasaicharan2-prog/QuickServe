@@ -64,3 +64,8 @@ build/
 .env
 .env.local
 .env.*.local
+
+# Backend — local secrets (DB password, JWT secret)
+# Copy application.properties.template → application.properties and fill in real values.
+# Do NOT commit application.properties with real credentials.
+backend/src/main/resources/application.properties

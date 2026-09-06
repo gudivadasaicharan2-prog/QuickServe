@@ -22,10 +22,15 @@ public class ServiceRequestController {
 
     /**
      * POST /api/requests
-     * Creates a new service request.
+     * Creates a new service request. Requires an active table session.
      */
     @PostMapping
-    public ResponseEntity<ServiceRequestResponse> createRequest(@Valid @RequestBody ServiceRequestRequest request) {
+    public ResponseEntity<ServiceRequestResponse> createRequest(
+            @RequestHeader(value = "X-Session-Token", required = false) String sessionTokenHeader,
+            @Valid @RequestBody ServiceRequestRequest request) {
+        if (request.getSessionToken() == null && sessionTokenHeader != null) {
+            request.setSessionToken(sessionTokenHeader);
+        }
         ServiceRequestResponse created = requestService.createRequest(request);
         return ResponseEntity.status(HttpStatus.CREATED).body(created);
     }

@@ -30,7 +30,7 @@ const Sidebar = () => {
 
   const handleLogout = () => {
     removeToken();
-    navigate('/login');
+    navigate('/login', { replace: true });
   };
 
   return (

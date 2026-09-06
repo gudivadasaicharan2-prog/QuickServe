@@ -4,11 +4,17 @@ import API_URL from './api';
  * Places an order with the backend.
  * @param {{ tableNumber: string, specialInstructions?: string, items: Array<{ menuItemId: number, quantity: number }> }} payload
  */
-export async function placeOrder(payload) {
+export async function placeOrder(payload, sessionToken) {
+  const token = sessionToken || localStorage.getItem('qs_session_token');
+  const headers = { 'Content-Type': 'application/json' };
+  if (token) {
+    headers['X-Session-Token'] = token;
+  }
+
   const response = await fetch(`${API_URL}/orders`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(payload),
+    headers,
+    body: JSON.stringify({ ...payload, sessionToken: token }),
   });
 
   if (!response.ok) {

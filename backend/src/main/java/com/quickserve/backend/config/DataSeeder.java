@@ -4,6 +4,7 @@ import com.quickserve.backend.entity.*;
 import com.quickserve.backend.repository.*;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -24,6 +25,9 @@ public class DataSeeder {
     private final MenuItemRepository    menuItemRepository;
     private final PasswordEncoder       passwordEncoder;
 
+    @Value("${quickserve.owner.password:${QUICKSERVE_OWNER_PASSWORD:admin123}}")
+    private String ownerPassword;
+
     @Bean
     public CommandLineRunner seedDatabase() {
         return args -> {
@@ -41,8 +45,8 @@ public class DataSeeder {
         if (userRepository.existsByUsername("admin")) {
             // Update password to ensure it matches the configured password
             userRepository.findByUsername("admin").ifPresent(owner -> {
-                if (!passwordEncoder.matches("sai@2008", owner.getPassword())) {
-                    owner.setPassword(passwordEncoder.encode("sai@2008"));
+                if (!passwordEncoder.matches(ownerPassword, owner.getPassword())) {
+                    owner.setPassword(passwordEncoder.encode(ownerPassword));
                     userRepository.save(owner);
                     log.info("[Seed] Owner password updated → username: admin");
                 } else {
@@ -53,7 +57,7 @@ public class DataSeeder {
         }
         User owner = User.builder()
                 .username("admin")
-                .password(passwordEncoder.encode("sai@2008"))
+                .password(passwordEncoder.encode(ownerPassword))
                 .fullName("System Administrator")
                 .role(Role.OWNER)
                 .enabled(true)

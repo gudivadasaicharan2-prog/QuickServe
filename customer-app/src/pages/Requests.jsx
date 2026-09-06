@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useCart } from '../context/CartContext';
+import { useSession } from '../context/SessionContext';
 import { createServiceRequest, fetchServiceRequests } from '../services/requestService';
 import {
   Bell,
@@ -51,6 +52,9 @@ const ACTIONS = [
 
 const Requests = () => {
   const { tableNumber } = useCart();
+  const { sessionTable, sessionToken, markSessionClosed } = useSession();
+  const effectiveTable = sessionTable || tableNumber || '1';
+
   const [submittingType, setSubmittingType] = useState(null);
   const [recentRequests, setRecentRequests] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -78,11 +82,20 @@ const Requests = () => {
     setSuccessMessage(null);
 
     try {
-      await createServiceRequest({
-        tableNumber: String(tableNumber || '1'),
-        requestType: actionType,
-        notes: `Customer request from Table ${tableNumber}`,
-      });
+      await createServiceRequest(
+        {
+          tableNumber: String(effectiveTable),
+          requestType: actionType,
+          notes: `Customer request from Table ${effectiveTable}`,
+        },
+        sessionToken
+      );
+
+      if (actionType === 'REQUEST_BILL') {
+        markSessionClosed();
+        return;
+      }
+
       setSuccessMessage(`${title} sent! Our staff is on the way.`);
       loadRequests();
       setTimeout(() => setSuccessMessage(null), 5000);

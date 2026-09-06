@@ -1,7 +1,6 @@
-const BASE_URL = 'http://localhost:8080';
+import { getToken, removeToken } from './authService';
 
-// Token key matches the project-wide storage convention in customer-app/src/services/authService.js
-const TOKEN_KEY = 'quickserve_token';
+const BASE_URL = 'http://localhost:8080';
 
 /**
  * Authenticated API fetch wrapper.
@@ -9,15 +8,20 @@ const TOKEN_KEY = 'quickserve_token';
  * @param {{ method?: string, body?: object }} [options] - Optional method (default GET) and body.
  */
 const fetchApi = async (endpoint, options = {}) => {
-  const token = localStorage.getItem(TOKEN_KEY);
+  const token = getToken();
+
+  if (!token) {
+    removeToken();
+    if (window.location.pathname !== '/login') {
+      window.location.href = '/login';
+    }
+    throw new Error(`Authentication required (${endpoint})`);
+  }
 
   const headers = {
     'Content-Type': 'application/json',
+    'Authorization': `Bearer ${token}`,
   };
-
-  if (token) {
-    headers['Authorization'] = `Bearer ${token}`;
-  }
 
   const fetchOptions = {
     method: options.method || 'GET',
@@ -31,6 +35,12 @@ const fetchApi = async (endpoint, options = {}) => {
   const response = await fetch(`${BASE_URL}${endpoint}`, fetchOptions);
 
   if (!response.ok) {
+    if (response.status === 401) {
+      removeToken();
+      if (window.location.pathname !== '/login') {
+        window.location.href = '/login';
+      }
+    }
     throw new Error(`API error: ${response.status} ${response.statusText} (${endpoint})`);
   }
 

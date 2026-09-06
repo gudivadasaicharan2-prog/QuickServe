@@ -1,18 +1,23 @@
 import { useState, useEffect } from 'react';
 import { useTheme } from '../context/ThemeContext';
 import { useCart } from '../context/CartContext';
-import { fetchTables } from '../services/menuService';
-import { Sun, Moon, ChefHat, ChevronDown, Check } from 'lucide-react';
+import { useSession } from '../context/SessionContext';
+import { fetchPublicTables } from '../services/sessionService';
+import { Sun, Moon, ChefHat, ChevronDown, Check, AlertCircle } from 'lucide-react';
 import './CustomerHeader.css';
 
 const CustomerHeader = () => {
   const { theme, toggleTheme } = useTheme();
   const { tableNumber, setTableNumber } = useCart();
+  const { sessionTable, hasActiveSession, claimTable } = useSession();
+  const currentTable = sessionTable || tableNumber || '1';
+
   const [tables, setTables] = useState([]);
   const [isSelectingTable, setIsSelectingTable] = useState(false);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
-    fetchTables()
+    fetchPublicTables()
       .then((data) => {
         if (Array.isArray(data) && data.length > 0) {
           setTables(data);
@@ -21,11 +26,19 @@ const CustomerHeader = () => {
       .catch(() => {
         // Fallback: silently ignore if table list cannot be fetched
       });
-  }, []);
+  }, [isSelectingTable]);
 
-  const handleSelectTable = (tblNum) => {
-    setTableNumber(String(tblNum));
-    setIsSelectingTable(false);
+  const handleSelectTable = async (tblNum) => {
+    setError(null);
+    try {
+      if (claimTable) {
+        await claimTable(tblNum);
+      }
+      setTableNumber(String(tblNum));
+      setIsSelectingTable(false);
+    } catch (err) {
+      setError(err.message || `Table ${tblNum} is currently occupied.`);
+    }
   };
 
   return (
@@ -39,15 +52,31 @@ const CustomerHeader = () => {
           <span className="customer-header__name">QuickServe</span>
         </div>
 
-        {/* Table Selector */}
+        {/* Table Selector / Badge */}
         <div className="customer-header__table-wrap">
           <button
             className="customer-header__table-badge"
-            onClick={() => setIsSelectingTable((v) => !v)}
+            onClick={() => {
+              setError(null);
+              setIsSelectingTable((v) => !v);
+            }}
             aria-label="Change table number"
+            title={hasActiveSession ? 'Active Table Session' : 'Select Table'}
           >
             <span className="customer-header__table-label">TABLE</span>
-            <strong className="customer-header__table-number">{tableNumber || '1'}</strong>
+            <strong className="customer-header__table-number">{currentTable}</strong>
+            {hasActiveSession && (
+              <span
+                style={{
+                  width: 7,
+                  height: 7,
+                  borderRadius: '50%',
+                  background: 'var(--success)',
+                  display: 'inline-block',
+                }}
+                title="Active Session"
+              />
+            )}
             <ChevronDown size={13} style={{ opacity: 0.6 }} />
           </button>
         </div>
@@ -80,25 +109,49 @@ const CustomerHeader = () => {
               <p>Choose your table to link orders and requests</p>
             </div>
 
+            {error && (
+              <div
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.5rem',
+                  padding: '0.625rem 0.875rem',
+                  background: 'var(--danger-light)',
+                  color: 'var(--danger)',
+                  borderRadius: 'var(--radius-sm)',
+                  fontSize: '0.8125rem',
+                  marginBottom: '0.875rem',
+                }}
+              >
+                <AlertCircle size={15} />
+                <span>{error}</span>
+              </div>
+            )}
+
             <div className="table-grid">
               {tables.length > 0 ? (
-                tables.map((tbl) => (
-                  <button
-                    key={tbl.id}
-                    className={`table-btn${
-                      String(tbl.tableNumber) === String(tableNumber)
-                        ? ' table-btn--selected'
-                        : ''
-                    }`}
-                    onClick={() => handleSelectTable(tbl.tableNumber)}
-                  >
-                    <span className="table-btn__num">Table {tbl.tableNumber}</span>
-                    <span className="table-btn__cap">{tbl.capacity} seats</span>
-                    {String(tbl.tableNumber) === String(tableNumber) && (
-                      <Check size={14} className="table-btn__check" />
-                    )}
-                  </button>
-                ))
+                tables.map((tbl) => {
+                  const isSelected = String(tbl.tableNumber) === String(currentTable);
+                  const isOccupied = tbl.status === 'OCCUPIED' && !isSelected;
+
+                  return (
+                    <button
+                      key={tbl.id}
+                      className={`table-btn${isSelected ? ' table-btn--selected' : ''}`}
+                      disabled={isOccupied}
+                      style={isOccupied ? { opacity: 0.5, cursor: 'not-allowed' } : undefined}
+                      onClick={() => handleSelectTable(tbl.tableNumber)}
+                    >
+                      <span className="table-btn__num">Table {tbl.tableNumber}</span>
+                      <span className="table-btn__cap">
+                        {isOccupied ? 'Occupied' : `${tbl.capacity} seats`}
+                      </span>
+                      {isSelected && (
+                        <Check size={14} className="table-btn__check" />
+                      )}
+                    </button>
+                  );
+                })
               ) : (
                 // Fallback 1-12 if API returned no tables
                 Array.from({ length: 12 }, (_, i) => i + 1).map((n) => (

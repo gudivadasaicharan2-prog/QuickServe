@@ -21,6 +21,7 @@ import java.util.stream.Collectors;
 public class RestaurantTableServiceImpl implements RestaurantTableService {
 
     private final RestaurantTableRepository tableRepository;
+    private final com.quickserve.backend.repository.TableSessionRepository tableSessionRepository;
 
     @Override
     public RestaurantTableResponse createTable(RestaurantTableRequest request) {
@@ -93,6 +94,14 @@ public class RestaurantTableServiceImpl implements RestaurantTableService {
         existing.setQrCode(request.getQrCode().trim());
         if (request.getStatus() != null) {
             existing.setStatus(request.getStatus());
+            if (request.getStatus() == TableStatus.AVAILABLE) {
+                tableSessionRepository.findByRestaurantTableAndStatus(existing, com.quickserve.backend.entity.SessionStatus.ACTIVE)
+                        .ifPresent(s -> {
+                            s.setStatus(com.quickserve.backend.entity.SessionStatus.CLOSED);
+                            s.setClosedAt(java.time.LocalDateTime.now());
+                            tableSessionRepository.save(s);
+                        });
+            }
         }
         if (request.getActive() != null) {
             existing.setActive(request.getActive());

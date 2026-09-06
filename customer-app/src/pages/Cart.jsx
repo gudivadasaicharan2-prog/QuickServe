@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useCart } from '../context/CartContext';
+import { useSession } from '../context/SessionContext';
 import { placeOrder } from '../services/orderService';
 import {
   ShoppingBag,
@@ -27,6 +28,9 @@ const Cart = () => {
     totalItems,
   } = useCart();
 
+  const { sessionTable, sessionToken } = useSession();
+  const effectiveTable = sessionTable || tableNumber || '1';
+
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState(null);
   const [placedOrder, setPlacedOrder] = useState(null);
@@ -40,7 +44,7 @@ const Cart = () => {
 
     try {
       const payload = {
-        tableNumber: String(tableNumber || '1'),
+        tableNumber: String(effectiveTable),
         specialInstructions: cookingInstructions.trim() || undefined,
         items: cart.map((item) => ({
           menuItemId: item.id,
@@ -48,7 +52,7 @@ const Cart = () => {
         })),
       };
 
-      const result = await placeOrder(payload);
+      const result = await placeOrder(payload, sessionToken);
       setPlacedOrder(result);
       clearCart();
     } catch (err) {
@@ -138,7 +142,7 @@ const Cart = () => {
         </Link>
         <h1 className="cart-title">Your Order</h1>
         <div className="cart-table-tag">
-          Table <strong>{tableNumber}</strong>
+          Table <strong>{effectiveTable}</strong>
         </div>
       </div>
 
@@ -244,7 +248,7 @@ const Cart = () => {
             </>
           ) : (
             <>
-              <span>Place Order for Table {tableNumber}</span>
+              <span>Place Order for Table {effectiveTable}</span>
               <span className="cart-place-total">• ₹{cartTotal.toFixed(2)}</span>
             </>
           )}

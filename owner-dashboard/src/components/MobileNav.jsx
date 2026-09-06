@@ -16,6 +16,7 @@ import {
 } from 'lucide-react';
 import { removeToken } from '../utils/authService';
 import { useTheme } from '../context/ThemeContext';
+import NotificationBell from './NotificationBell';
 import './MobileNav.css';
 
 const NAV_ITEMS = [
@@ -34,7 +35,7 @@ const MobileNav = () => {
 
   const handleLogout = () => {
     removeToken();
-    navigate('/login');
+    navigate('/login', { replace: true });
   };
 
   return (
@@ -48,6 +49,7 @@ const MobileNav = () => {
           <span>QuickServe</span>
         </div>
         <div className="mobile-header__actions">
+          <NotificationBell />
           <button
             className="btn-icon"
             onClick={toggleTheme}

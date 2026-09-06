@@ -30,9 +30,14 @@ public class CustomerOrderServiceImpl implements CustomerOrderService {
 
     private final CustomerOrderRepository orderRepository;
     private final MenuItemRepository menuItemRepository;
+    private final com.quickserve.backend.service.TableSessionService sessionService;
+    private final com.quickserve.backend.service.NotificationService notificationService;
 
     @Override
     public OrderResponse placeOrder(OrderRequest request) {
+        // Enforce active customer table session
+        sessionService.validateActiveSession(request.getSessionToken(), request.getTableNumber());
+
         CustomerOrder order = CustomerOrder.builder()
                 .orderNumber(generateOrderNumber())
                 .tableNumber(request.getTableNumber().trim())
@@ -67,6 +72,16 @@ public class CustomerOrderServiceImpl implements CustomerOrderService {
         order.setTotalAmount(totalAmount);
 
         CustomerOrder savedOrder = orderRepository.save(order);
+
+        // Notify owner of new customer order
+        notificationService.createNotification(
+                "New Order — Table " + savedOrder.getTableNumber(),
+                "Order #" + savedOrder.getOrderNumber() + " with " + savedOrder.getOrderItems().size() + " item(s) (₹" + savedOrder.getTotalAmount() + ")",
+                "ORDER",
+                savedOrder.getId(),
+                savedOrder.getTableNumber()
+        );
+
         return toResponse(savedOrder);
     }
 

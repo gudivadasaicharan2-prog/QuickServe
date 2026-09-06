@@ -21,9 +21,14 @@ import java.util.stream.Collectors;
 public class ServiceRequestServiceImpl implements ServiceRequestService {
 
     private final ServiceRequestRepository requestRepository;
+    private final com.quickserve.backend.service.TableSessionService sessionService;
+    private final com.quickserve.backend.service.NotificationService notificationService;
 
     @Override
     public ServiceRequestResponse createRequest(ServiceRequestRequest request) {
+        // Enforce active customer table session
+        sessionService.validateActiveSession(request.getSessionToken(), request.getTableNumber());
+
         ServiceRequest serviceRequest = ServiceRequest.builder()
                 .tableNumber(request.getTableNumber().trim())
                 .requestType(request.getRequestType())
@@ -31,7 +36,45 @@ public class ServiceRequestServiceImpl implements ServiceRequestService {
                 .status(RequestStatus.PENDING)
                 .build();
 
-        return toResponse(requestRepository.save(serviceRequest));
+        ServiceRequest saved = requestRepository.save(serviceRequest);
+
+        // Lifecycle: REQUEST_BILL closes the customer table session and frees the table
+        if (request.getRequestType() == com.quickserve.backend.entity.RequestType.REQUEST_BILL) {
+            sessionService.closeSessionForTable(request.getTableNumber());
+        }
+
+        // Notify owner of service request
+        String notificationTitle = buildNotificationTitle(request.getRequestType(), request.getTableNumber().trim());
+        String notificationMessage = request.getNotes() != null && !request.getNotes().isBlank()
+                ? request.getNotes()
+                : "Table " + request.getTableNumber() + " - " + request.getRequestType().name().replace('_', ' ');
+
+        notificationService.createNotification(
+                notificationTitle,
+                notificationMessage,
+                "REQUEST",
+                saved.getId(),
+                request.getTableNumber().trim()
+        );
+
+        return toResponse(saved);
+    }
+
+    private String buildNotificationTitle(com.quickserve.backend.entity.RequestType type, String tableNumber) {
+        switch (type) {
+            case REQUEST_BILL:
+                return "Table " + tableNumber + " requested the Bill";
+            case WATER:
+                return "Table " + tableNumber + " requested Water";
+            case CALL_WAITER:
+                return "Table " + tableNumber + " called the Waiter";
+            case CUTLERY:
+                return "Table " + tableNumber + " requested Cutlery";
+            case TISSUE:
+                return "Table " + tableNumber + " requested Tissue";
+            default:
+                return "Table " + tableNumber + " requested " + type.name().replace('_', ' ');
+        }
     }
 
     @Override

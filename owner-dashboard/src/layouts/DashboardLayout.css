@@ -11,10 +11,29 @@
   transition: background var(--transition-md);
 }
 
+.dashboard-topbar {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  padding: 0.75rem 2rem;
+  border-bottom: 1px solid var(--border);
+  background: var(--surface);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  transition: background var(--transition-md), border-color var(--transition-md);
+}
+
+.dashboard-topbar__actions {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
 .dashboard-content {
   padding: 2rem;
   max-width: 1400px;
-  min-height: 100vh;
+  min-height: calc(100vh - 58px);
 }
 
 @media (max-width: 768px) {

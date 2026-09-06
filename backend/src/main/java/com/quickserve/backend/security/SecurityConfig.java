@@ -52,12 +52,16 @@ public class SecurityConfig {
                         ).permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/categories/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/menu/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/tables/public").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/tables/qr/**").permitAll()
+                        .requestMatchers("/api/sessions/**").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/orders").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/orders").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/orders/{id}").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/requests").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/requests/{id}").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/location/validate").permitAll()
+                        .requestMatchers("/api/notifications/**").hasRole("OWNER")
                         .anyRequest().hasRole("OWNER")
                 );
 
@@ -69,9 +73,12 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();
-        config.setAllowedOrigins(List.of("http://localhost:5173"));
+        config.setAllowedOrigins(List.of(
+                "http://localhost:5173",
+                "http://localhost:5174"
+        ));
         config.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
-        config.setAllowedHeaders(List.of("Authorization", "Content-Type"));
+        config.setAllowedHeaders(List.of("Authorization", "Content-Type", "X-Session-Token"));
         config.setAllowCredentials(true);
         config.setMaxAge(3600L);
 
